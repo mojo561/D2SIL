@@ -22,13 +22,20 @@
 *                                                                           *
 *****************************************************************************/
 
-#define WIN32_LEAN_AND_MEAN
-#define _CRT_SECURE_NO_DEPRECATE
-#define _WIN32_WINNT 0x600
+//reference: https://d2mods.info/forum/viewtopic.php?f=8&t=62109&p=482668&hilit=D2net#p482668
 
-#include <windows.h>
-#include <stdio.h>
-#include <stdlib.h>
+//moved to framework.h
+//#define WIN32_LEAN_AND_MEAN
+//let's use secure functions...
+//#define _CRT_SECURE_NO_DEPRECATE
+//https://docs.microsoft.com/en-us/cpp/porting/modifying-winver-and-win32-winnt?view=msvc-160
+//moved to framework.h
+//#define _WIN32_WINNT 0x600
+
+//already included in framework.h
+//#include <windows.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 
 static const DWORD DLLBASE_BNCLIENT     =   (DWORD)LoadLibraryA("Bnclient.dll");
 static const DWORD DLLBASE_D2CLIENT     =   (DWORD)LoadLibraryA("D2Client.dll");
@@ -62,16 +69,37 @@ static const DWORD DLLBASE_SMACKW32     =   (DWORD)LoadLibraryA("SmackW32.dll");
 
 struct DLLBaseStrc
 {
-    char* szName;
+    //char* szName;
+	LPCWSTR szName;
     DWORD dwAddress;
 };
 
 struct DLLPatchStrc
 {
+	/*
+	This defines in which of the game's library this patch should be applied.
+	This is needed so that the template's patcher can retrieve the said library's
+	base address (as the patcher uses relative addresses patch definitions, to keep compatibility in case of reallocation).
+	The dll name definitions are found in DLLmain.h.
+	It is also possible to extend this in order to have it patch custom libraries that are not defined in the original template
+	*/
     int nDLL;
+	/*
+	This is the relative address at which the patch should be applied.
+	*/
     DWORD dwAddress;
+	/*
+	This is the data you want to patch. This can be a function, some bytes, whatever you want.
+	*/
     DWORD dwData;
+	/*
+	This tells the patcher whether it should consider this patch as a relative address.
+	*/
     BOOL bRelative;
+	/*
+	This here defines the number of bytes to patch. Setting this to 0 will make it patch a DWORD.
+	You should use non-zero values only when you want to make big repetitive patches, such as nop blocks.
+	*/
     size_t nPatchSize;
 };
 
@@ -130,4 +158,4 @@ static DLLBaseStrc gptDllFiles [] =
 
 void __fastcall D2TEMPLATE_FatalError(char* szMessage);
 DWORD __fastcall GetDllOffset(char* ModuleName, DWORD BaseAddress, int Offset);
-char* __fastcall GetModuleExt(char* ModuleName);
+//char* __fastcall GetModuleExt(char* ModuleName);

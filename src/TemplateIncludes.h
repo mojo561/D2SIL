@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef _TEMPLATEINCLUDES_H
-#define _TEMPLATEINCLUDES_H
-
 /****************************************************************************
 *                                                                           *
 *   DLLmain.h                                                               *
@@ -27,9 +24,10 @@
 *                                                                           *
 *****************************************************************************/
 
-//#include "MyOwnSourceHeader1.h"
-//#include "MyOwnSourceHeader2.h"
-//#include "MyOwnSourceHeader3.h"
+#include "RuleImpl.hpp"
+#include "RuleEvaluatorImpl.hpp"
+#include "ScopedThread.hpp"
+#include "CustomD2Common.hpp"
+#include "ItemPrinter.hpp"
 
 // end of file --------------------------------------------------------------
-#endif

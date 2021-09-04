@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef _D2STRUCTS_H
-#define _D2STRUCTS_H
-
 #include "D2DataTables.h"
 #include "D2PacketDef.h"
 #pragma pack(1)
@@ -39,8 +36,8 @@
 *                                                                           *
 *****************************************************************************/
 
-struct D2GameStrc;
-struct D2UnitStrc;
+//struct D2GameStrc;
+//struct D2UnitStrc;
 
 /****************************************************************************
 *                                                                           *
@@ -48,16 +45,15 @@ struct D2UnitStrc;
 *                                                                           *
 *****************************************************************************/
 
-struct D2GameStrc
-{
-    //...
-};
+//struct D2GameStrc
+//{
+//    //...
+//};
 
-struct D2UnitStrc
-{
-    //...
-};
+//struct D2UnitStrc
+//{
+//    //...
+//};
 
 // end of file --------------------------------------------------------------
 #pragma pack()
-#endif

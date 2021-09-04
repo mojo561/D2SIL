@@ -29,11 +29,11 @@
 *                                                                           *
 *****************************************************************************/
 
-VAR(DWORD, SampleVariable1)
+//VAR(DWORD, SampleVariable1)
 
-VAR(void*, SampleVariable2)
+//VAR(void*, SampleVariable2)
 
-VAR(char, SampleVariable3[256])
+//VAR(char, SampleVariable3[256])
 
 // end of file ---------------------------------------------------------------
 #undef _D2VARS_H

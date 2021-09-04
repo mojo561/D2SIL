@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef _D2PATCHCONST_H
-#define _D2PATCHCONST_H
-
 /****************************************************************************
 *                                                                           *
 *   D2PatchConst.h                                                          *
@@ -41,5 +38,3 @@
 #define PATCH_RETN18            0x000018C2
 #define PATCH_RETN1C            0x00001CC2
 #define PATCH_NOPBLOCK          0x90909090
-
-#endif
