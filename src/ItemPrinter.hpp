@@ -362,24 +362,32 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeight(D2AutoMagic
 	if (modCode < dwMaxModCode)
 	{
 		DWORD32 dwModMax = CommonD2Funcs::findModMax(ptrMagicAffixRecord, modCode);
-		std::cout << std::hex << modCode << ' ' << std::dec << d2Stat.id << ' ' << d2Stat.value << ' ' << dwModMax << std::endl;
+		uint32_t nStatValue = d2Stat.value;
+		ItemStatCostBIN* ptrISC = ((*D2COMMON_sgptDataTables)->pItemStatCostTxt) + d2Stat.id;
+		BYTE bValShift = ptrISC->valshift;
+		if (bValShift > 0 && bValShift < 64)
+		{
+			nStatValue = nStatValue >> bValShift;
+		}
+
+		if (nStatValue <= dwModMax)
+		{
+			if (ptrISC->descstrpos > 0 && ptrISC->descstrpos != static_cast<WORD>(D2ClassicStrings::D2STR_DUMMY))
+			{
+				std::wcout << D2LANG_GetTableString(ptrISC->descstrpos) << ':';
+			}
+			else
+			{
+				std::cout << std::dec << d2Stat.id << ':';
+			}
+			std::cout << std::setprecision(4) << (nStatValue / (float)dwModMax) * 100 << '%' << std::endl;
+		}
+		else
+		{
+			std::cout << std::hex << modCode << ' ' << std::dec << d2Stat.id << ' ' << d2Stat.value << ' ' << dwModMax << std::endl;
+		}
 	}
 }
-
-/*
-ItemStatCostBIN* ptrISC = ((*D2COMMON_sgptDataTables)->pItemStatCostTxt) + d2Stat.id;
-									BYTE bValShift = ptrISC->valshift;
-									//assumption: valid valshift values are always 8...
-									if (bValShift == 8)
-									{
-										score = ((d2Stat.value >> bValShift) / score) * 100.f;
-										sprintf_s(szdbgBuffer, _countof(szdbgBuffer), "(%d:%d%%)", d2Stat.id, static_cast<int>( score ));
-									}
-									else
-									{
-										sprintf_s(szdbgBuffer, _countof(szdbgBuffer), "(%d:%d/%d)", d2Stat.id, d2Stat.value, static_cast<int>( score ));
-									}
-*/
 
 __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeights(Unit* ptrItemUnit)
 {
@@ -399,6 +407,8 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeights(Unit* ptrI
 
 	//Note: Some stats are repeated, namely the + to skill(s) stats 
 
+	std::cout << '\n';
+
 	for (int i = 0; i < wItemStatTableSize; ++i)
 	{
 		d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
@@ -408,22 +418,11 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeights(Unit* ptrI
 		for (int j = 0; j < 3; ++j)
 		{
 			wMagicAffixCode = D2COMMON_ITEMS_GetMagicPrefix(ptrItemUnit, j);
-			ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
+			ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode); //TODO: when mod1code is 2^32-1, examine further... also some of this code is repeated
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_TEAL | FOREGROUND_INTENSITY);
 			doPrintAffixWeight(ptrMagicAffixRecord, d2Stat);
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
 		}
-		//for (int i = 0; i < 3; ++i)
-		//{
-		//	DWORD32 modCode = findModContainingStat(ptrMagicAffixRecord, d2Stat);
-		//	if (modCode < dwMaxModCode)
-		//	{
-		//		DWORD32 dwModMax = findModMax(ptrMagicAffixRecord, modCode);
-		//		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-		//		std::cout << std::hex << modCode << ' ' << std::dec << d2Stat.id << ' ' << d2Stat.value << ' ' << dwModMax << std::endl;
-		//		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
-		//	}
-		//}
 		//suffix
 		for (int j = 0; j < 3; ++j)
 		{
@@ -433,41 +432,7 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeights(Unit* ptrI
 			doPrintAffixWeight(ptrMagicAffixRecord, d2Stat);
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
 		}
-		//for (int i = 0; i < 3; ++i)
-		//{
-		//	DWORD32 modCode = findModContainingStat(ptrMagicAffixRecord, d2Stat);
-		//	if (modCode < dwMaxModCode)
-		//	{
-		//		DWORD32 dwModMax = findModMax(ptrMagicAffixRecord, modCode);
-		//		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
-		//		std::cout << std::hex << modCode << ' ' << std::dec << d2Stat.id << ' ' << d2Stat.value << ' ' << dwModMax << std::endl;
-		//		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
-		//	}
-		//}
 	}
-
-	//for (int i = 0; i < 3; ++i)
-	//{
-	//	WORD wMagicPrefixCode = D2COMMON_ITEMS_GetMagicPrefix(ptrItemUnit, i);
-	//	D2AutoMagicTxt* ptrMagicPrefixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicPrefixCode);
-	//	if (ptrMagicPrefixRecord == nullptr)
-	//		continue;
-	//
-	//	printAffixWeight(ptrMagicPrefixRecord, ptrMagicPrefixRecord->dwMod1Code);
-	//	printAffixWeight(ptrMagicPrefixRecord, ptrMagicPrefixRecord->dwMod2Code);
-	//	printAffixWeight(ptrMagicPrefixRecord, ptrMagicPrefixRecord->dwMod3Code);
-	//}
-
-	//for (int i = 0; i < 3; ++i)
-	//{
-	//	WORD wMagicSuffixCode = D2COMMON_ITEMRECORDS_GetItemSuffix(ptrItemUnit, i);
-	//	D2AutoMagicTxt* ptrMagicSuffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicSuffixCode);
-	//	
-	//	if (ptrMagicSuffixRecord != nullptr)
-	//	{
-	//		//printAffixWeight(ptrMagicSuffixRecord, ptrItemUnit);
-	//	}
-	//}
 }
 
 __declspec(dllexport) void __stdcall ItemPrinter::doPrintItemMagicSuffix(Unit* ptrItemUnit)
@@ -725,80 +690,6 @@ __declspec(dllexport) void __fastcall ItemPrinter::doPrintItemName(Unit* ptrItem
 		}
 	}
 
-	//////////////////////////
-	//	test
-	//works
-	/*if (ptrItemUnit->ptStats != nullptr)
-	{
-		Stats statsList = *(ptrItemUnit->ptStats);
-		if (statsList.ptAffixStats != nullptr)
-		{
-			Stats statsNext = *(statsList.ptAffixStats);
-			if (statsNext.ptBaseStatsTable != nullptr)
-			{
-				wchar_t szAffixTextBuffer[0x400] = { 0 };
-				wchar_t buffer[0x400] = { 0 };
-				getItemAffixText(ptrItemUnit, szAffixTextBuffer);
-
-				//todo: testing
-				WORD numAffixStats = statsNext.nbBaseStats;
-				std::cout << '(' << std::dec << numAffixStats << ')' << std::endl;
-
-				wcscpy_s(buffer, 0x400, szAffixTextBuffer);
-				std::wcout << buffer << " ->";
-				///////////////
-				
-				//wcscpy_s(buffer, 0x400, szAffixTextBuffer);
-				//std::wcout << '\n' << buffer << " ->";
-			}
-		}
-	}*/
-
-	//this works as well
-	/*if (ptrItemUnit->ptStats != nullptr)
-	{
-		//std::cout << "\tptrItemUnit->ptStatsList: " << ptrItemUnit->ptStats << std::endl;
-		Stats statsList = *(ptrItemUnit->ptStats);
-
-		if (statsList.ptAffixStats != nullptr)
-		{
-			//std::cout << "\t\tstatsList.ptNext: " << statsList.ptAffixStats << std::endl;
-			Stats statsNext = *(statsList.ptAffixStats);
-			if (statsNext.ptBaseStatsTable != nullptr)
-			{
-				//std::cout << "\t\t\tstatsNext.nbBaseStats: " << statsNext.nbBaseStats << std::endl;
-				//std::cout << "\t\t\tstatsNext.ptBaseStatsTable: " << statsNext.ptBaseStatsTable << std::endl;
-
-				std::cout << std::endl;
-				for (int i = 0; i < statsNext.nbBaseStats; ++i)
-				{
-					D2Stat d2stat = statsNext.ptBaseStatsTable[i];
-					ItemStatCostBIN* foo = ((*D2COMMON_sgptDataTables)->pItemStatCostTxt) + d2stat.id;
-					if (foo->descstrpos > 0 && foo->descstrpos != 5382) // 5382 = dummy value: 'an evil force'
-					{
-						std::cout << std::dec << std::showpos << d2stat.value << std::noshowpos << ' ';
-						std::wcout << D2LANG_GetTableString(foo->descstrpos);
-						std::cout << '(' << std::dec << d2stat.id << ')';
-					}
-					else
-					{
-						std::cout << '<';
-						std::cout << std::dec << d2stat.id << ',';
-						if(d2stat.index != 0)
-							std::cout << std::dec << d2stat.index << ',';
-						std::cout << std::dec << d2stat.value << '>';
-					}
-					if (i != statsNext.nbBaseStats - 1)
-							std::cout << std::endl;
-				}
-				std::cout << ' ';
-			}
-		}
-	}*/
-
-	//  end test
-	//////////////////////////
-
 	if (itemQuality <= D2C_ItemQuality::ITEMQUALITY_TEMPERED && !isNormal)
 	{
 		switch (itemQuality)
@@ -893,15 +784,8 @@ __declspec(dllexport) void __fastcall ItemPrinter::doPrintItemName(Unit* ptrItem
 		BOOL isEthereal = D2COMMON_ITEMFLAGS_CheckEthereal(ptrItemUnit);
 		if (ptrUniqueItemRecord != nullptr)
 		{
-			//if (isEthereal)
-			if (!isEthereal)
+			if (isEthereal)
 			{
-				//TODO: Sureshrill Frost (Etherea
-				//const wchar_t wszEthereal[] = L" (Eth!)";
-				//wchar_t wszUniqueItemTitleBuffer[0x200] = { 0 };
-				//wcsncpy_s(wszUniqueItemTitleBuffer, sizeof(wszUniqueItemTitleBuffer), D2LANG_GetTableString(ptrUniqueItemRecord->uniqueNameId), _TRUNCATE);
-				//wcsncat_s(wszUniqueItemTitleBuffer, sizeof(wszEthereal), wszEthereal, _TRUNCATE);
-				//D2CLIENT_CHAT_PrintClientMessage(wszUniqueItemTitleBuffer, static_cast<BYTE>(D2C_D2Color::DARK_YELLOW));
 				const wchar_t wszEthereal[] = L" (Ethereal!)";
 				wchar_t *wszUniqueItemTitle = D2LANG_GetTableString(ptrUniqueItemRecord->uniqueNameId);
 				size_t nUniqueItemTitleLen = wcsnlen_s(wszUniqueItemTitle, 0x800) + _countof(wszEthereal) + 1;

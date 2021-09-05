@@ -1243,7 +1243,7 @@ struct sgptDataTable {
 	DWORD32	dwItemCalcCache;		//0xA0
 	PropertiesBIN*	pPropertiesTxt;	//0xA4
 	BYTE*	dwProperties;			//0xA8
-	DWORD32	dwProportiesRecs;		//0xAC (should be around 268)
+	DWORD32	dwProportiesRecs;		//0xAC Max (exclusive) stat mod code (should be around 268)
 	BYTE*	pRunes;					//0xB0
 	BYTE*	pHireDescs;				//0xB4
 	DWORD32	dwHireDescsRecs;		//0xB8
