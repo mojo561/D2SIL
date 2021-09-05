@@ -178,8 +178,7 @@ int __stdcall DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 			//std::cout.clear();
 
 			std::cout << "=================\n";
-			std::cout << "Diablo II - Simple Item Logger v0.1\n";
-
+			std::cout << "Simple Item Logger v0.1\n";
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);
 			std::cout << "Now with item logging!\n";
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
@@ -200,7 +199,6 @@ DWORD __fastcall GetDllOffset(char* ModuleName, DWORD BaseAddress, int Offset)
 {
 	if(!BaseAddress)
 	{
-		//BaseAddress = (DWORD)LoadLibraryA(GetModuleExt(ModuleName));
 		char dllName[32] = { '\0' };
 		char dllExt[5] = ".dll";
 		size_t moduleNameLen = strnlen_s(ModuleName, (sizeof(dllName) / sizeof(dllName[0])));
@@ -215,11 +213,3 @@ DWORD __fastcall GetDllOffset(char* ModuleName, DWORD BaseAddress, int Offset)
 
 	return BaseAddress + Offset;
 }
-
-//char* __fastcall GetModuleExt(char* ModuleName)
-//{
-//	char DLLExt[] = ".dll";
-//	char DLLName[32] = {0};
-//	strcpy(DLLName,ModuleName);
-//	return strcat(DLLName,DLLExt);
-//}

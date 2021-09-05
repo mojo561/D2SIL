@@ -366,6 +366,21 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeight(D2AutoMagic
 	}
 }
 
+/*
+ItemStatCostBIN* ptrISC = ((*D2COMMON_sgptDataTables)->pItemStatCostTxt) + d2Stat.id;
+									BYTE bValShift = ptrISC->valshift;
+									//assumption: valid valshift values are always 8...
+									if (bValShift == 8)
+									{
+										score = ((d2Stat.value >> bValShift) / score) * 100.f;
+										sprintf_s(szdbgBuffer, _countof(szdbgBuffer), "(%d:%d%%)", d2Stat.id, static_cast<int>( score ));
+									}
+									else
+									{
+										sprintf_s(szdbgBuffer, _countof(szdbgBuffer), "(%d:%d/%d)", d2Stat.id, d2Stat.value, static_cast<int>( score ));
+									}
+*/
+
 __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeights(Unit* ptrItemUnit)
 {
 	if (ptrItemUnit->ptStats == nullptr)

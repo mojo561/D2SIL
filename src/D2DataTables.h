@@ -34,8 +34,6 @@
 * DECLARATIONS                                                              *
 *                                                                           *
 *****************************************************************************/
-
-struct D2MonstatsTXT;
 struct D2ItemsTxt;
 struct D2ItemTypesTxt;
 struct D2AutoMagicTxt;
@@ -46,12 +44,6 @@ struct D2UniqueItemsTxt;
 * DEFINITIONS                                                               *
 *                                                                           *
 *****************************************************************************/
-
-struct D2MonstatsTXT
-{
-    //...
-};
-
 /*
 https://d2mods.info/forum/viewtopic.php?f=8&t=61189
 note: from v1.10 - still accurate?
