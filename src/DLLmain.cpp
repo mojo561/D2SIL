@@ -90,10 +90,10 @@ BOOL __fastcall D2TEMPLATE_LoadModules()
     {
         DLLBaseStrc* hDllFile = &gptDllFiles[i];
         
-        void* hModule = GetModuleHandle(hDllFile->szName);
+        void* hModule = GetModuleHandleW(hDllFile->szName);
         if (!hModule)
         {
-            hModule = LoadLibrary(hDllFile->szName);
+            hModule = LoadLibraryW(hDllFile->szName);
         }
 
         hDllFile->dwAddress = (DWORD)hModule;
@@ -157,7 +157,7 @@ int __stdcall DllAttach()
     return 1;
 }
 
-int __stdcall DllMain(HINSTANCE hModule, DWORD dwReason, void* lpReserved)
+int __stdcall DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
     FILE *f = nullptr;
 
@@ -172,7 +172,7 @@ int __stdcall DllMain(HINSTANCE hModule, DWORD dwReason, void* lpReserved)
 		{
 			AllocConsole();
 			freopen_s(&f, "CONOUT$", "w", stdout);
-			HANDLE hStdout = CreateFile(L"CONOUT$", GENERIC_WRITE, FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+			HANDLE hStdout = CreateFileW(L"CONOUT$", GENERIC_WRITE, FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 			SetStdHandle(STD_OUTPUT_HANDLE, hStdout);
 			//std::wcout.clear();
 			//std::cout.clear();

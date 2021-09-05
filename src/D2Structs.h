@@ -2,6 +2,8 @@
 
 #include "D2DataTables.h"
 #include "D2PacketDef.h"
+#include "D2BinFile.h"
+#include "D2UnitStruct.h"
 #pragma pack(1)
 
 /****************************************************************************
