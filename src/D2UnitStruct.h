@@ -139,7 +139,7 @@ struct Inventory
 struct D2Stat
 {
 	WORD	index;
-	WORD	id; //check ISC.txt
+	D2C_Stat id; //check ISC.txt
 	int		value;
 };
 

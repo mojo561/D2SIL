@@ -783,6 +783,14 @@ struct PropertiesBIN // size=0x2E (46) (source total : fct of dll)
 	BYTE	func7;			//+1E
 	BYTE	uk2[0x1];		//+1F
 
+	//D2C_Stat	stat1;			//+20
+	//D2C_Stat	stat2;			//+22
+	//D2C_Stat	stat3;			//+24
+	//D2C_Stat	stat4;			//+26
+	//D2C_Stat	stat5;			//+28
+	//D2C_Stat	stat6;			//+2A
+	//D2C_Stat	stat7;			//+2C
+
 	WORD	stat1;			//+20
 	WORD	stat2;			//+22
 	WORD	stat3;			//+24
@@ -790,8 +798,8 @@ struct PropertiesBIN // size=0x2E (46) (source total : fct of dll)
 	WORD	stat5;			//+28
 	WORD	stat6;			//+2A
 	WORD	stat7;			//+2C
-};
 
+};
 
 struct ItemStatCostBIN // size=0x144 (324) (source total : fct of dll) maxline = 0x1FF = 511
 {
@@ -1324,7 +1332,7 @@ struct sgptDataTable {
 	DWORD32	dwCharsStatsRecs;		//0xBC8
 	ItemStatCostBIN* pItemStatCostTxt;//0xBCC
 	BYTE*	pItemStatCost;			//0xBD0
-	DWORD32	dwItemStatCostRecs;		//0xBD4
+	DWORD32	dwItemStatCostRecs;		//0xBD4 - max number of records in ItemStatCost.txt (exclusive, should be 359-ish)
 	BYTE*	pOpStatNesting;			//0xBD8
 	DWORD32	dwOpStatNestingRecs;	//0xBDC
 	BYTE*	pMonEquip;				//0xBE0

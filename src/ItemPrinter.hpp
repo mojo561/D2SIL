@@ -361,30 +361,36 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeight(D2AutoMagic
 	DWORD32 modCode = CommonD2Funcs::findModContainingStat(ptrMagicAffixRecord, d2Stat);
 	if (modCode < dwMaxModCode)
 	{
-		DWORD32 dwModMax = CommonD2Funcs::findModMax(ptrMagicAffixRecord, modCode);
+		DWORD32 dwModNMax = CommonD2Funcs::findModMax(ptrMagicAffixRecord, modCode);
 		uint32_t nStatValue = d2Stat.value;
-		ItemStatCostBIN* ptrISC = ((*D2COMMON_sgptDataTables)->pItemStatCostTxt) + d2Stat.id;
+		ItemStatCostBIN* ptrISC = ((*D2COMMON_sgptDataTables)->pItemStatCostTxt) + static_cast<WORD>(d2Stat.id);
 		BYTE bValShift = ptrISC->valshift;
-		if (bValShift > 0 && bValShift < 64)
+		if (bValShift > 0 && bValShift <= 32)
 		{
-			nStatValue = nStatValue >> bValShift;
+			//nStatValue = nStatValue >> bValShift;
+			//test
+			do
+			{
+				nStatValue = nStatValue >> bValShift;
+			} while ( (nStatValue >> bValShift) > dwModNMax);
+			//end test
 		}
 
-		if (nStatValue <= dwModMax)
+		if (nStatValue <= dwModNMax)
 		{
 			if (ptrISC->descstrpos > 0 && ptrISC->descstrpos != static_cast<WORD>(D2ClassicStrings::D2STR_DUMMY))
 			{
-				std::wcout << D2LANG_GetTableString(ptrISC->descstrpos) << ':';
+				std::wcout << D2LANG_GetTableString(ptrISC->descstrpos) << ": ";
 			}
 			else
 			{
-				std::cout << std::dec << d2Stat.id << ':';
+				std::cout << std::dec << static_cast<WORD>(d2Stat.id) << ": ";
 			}
-			std::cout << std::setprecision(4) << (nStatValue / (float)dwModMax) * 100 << '%' << std::endl;
+			std::cout << std::dec << nStatValue << '(' << std::setprecision(4) << (nStatValue / (float)dwModNMax) * 100 << "%)" << std::endl;
 		}
 		else
 		{
-			std::cout << std::hex << modCode << ' ' << std::dec << d2Stat.id << ' ' << d2Stat.value << ' ' << dwModMax << std::endl;
+			std::cout << std::hex << modCode << ' ' << std::dec << static_cast<WORD>(d2Stat.id) << ' ' << d2Stat.value << ' ' << dwModNMax << std::endl;
 		}
 	}
 }
@@ -409,6 +415,36 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeights(Unit* ptrI
 
 	std::cout << '\n';
 
+	//TODO: move this somewhere else
+	//RuleEvaluatorImpl<D2C_Stat> skipPrintRules;
+
+	//testing
+	///auto lBlah = [](D2Stat d2Stat, D2AutoMagicTxt* ptrMagicAffixRecord, WORD wConsoleFGColor)
+	///{
+	///	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), wConsoleFGColor);
+	///	DWORD32 dwItemStatCostRecs = (*D2COMMON_sgptDataTables)->dwItemStatCostRecs;
+	///	DWORD32 dwMaxModCode = (*D2COMMON_sgptDataTables)->dwProportiesRecs;
+	///
+	///	//TODO: ptrMagicAffixRecord is sometimes null... let's check rval of D2COMMON_TXT_GetMagicAffixRecord before actually using it
+	///	if (ptrMagicAffixRecord == nullptr)
+	///		return;
+	///	if (ptrMagicAffixRecord->dwMod1Code >= dwMaxModCode)
+	///		return;
+	///
+	///	PropertiesBIN* ptrProperties = (*D2COMMON_sgptDataTables)->pPropertiesTxt + ptrMagicAffixRecord->dwMod1Code;
+	///	if (ptrProperties->stat1 >= dwItemStatCostRecs)
+	///	{
+	///		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+	///		std::cout << std::dec << static_cast<WORD>( d2Stat.id) << ':' << d2Stat.value << '/' << ptrMagicAffixRecord->dwMod1Max << std::endl;
+	///	}
+	///	else
+	///	{
+	///		doPrintAffixWeight(ptrMagicAffixRecord, d2Stat);
+	///	}
+	///	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
+	///};
+	//////////
+
 	for (int i = 0; i < wItemStatTableSize; ++i)
 	{
 		d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
@@ -418,10 +454,11 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeights(Unit* ptrI
 		for (int j = 0; j < 3; ++j)
 		{
 			wMagicAffixCode = D2COMMON_ITEMS_GetMagicPrefix(ptrItemUnit, j);
-			ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode); //TODO: when mod1code is 2^32-1, examine further... also some of this code is repeated
+			ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_TEAL | FOREGROUND_INTENSITY);
 			doPrintAffixWeight(ptrMagicAffixRecord, d2Stat);
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
+			//lBlah(d2Stat, ptrMagicAffixRecord, FOREGROUND_TEAL | FOREGROUND_INTENSITY);
 		}
 		//suffix
 		for (int j = 0; j < 3; ++j)
@@ -431,6 +468,7 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeights(Unit* ptrI
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_PURPLE | FOREGROUND_INTENSITY);
 			doPrintAffixWeight(ptrMagicAffixRecord, d2Stat);
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
+			//lBlah(d2Stat, ptrMagicAffixRecord, FOREGROUND_PURPLE | FOREGROUND_INTENSITY);
 		}
 	}
 }
@@ -640,6 +678,12 @@ __declspec(dllexport) void __fastcall ItemPrinter::doPrintItemName(Unit* ptrItem
 
 	if (ptrItemUnit->nUnitType != static_cast<DWORD32>(D2C_UnitType::UNIT_ITEM))
 		return;
+
+	//TODO: new / testing.
+	//this function always(?) returns null if the item is in a town. This test should fix log spamming while shopping
+	if (D2COMMON_DRLG_GetRoomFromUnit(ptrItemUnit) == nullptr)
+		return;
+	///////////////
 
 	DWORD dwItemCode = D2COMMON_ITEMRECORDS_GetCodeFromUnit(ptrItemUnit);
 	D2C_ItemCodes itemCode = static_cast<D2C_ItemCodes>(dwItemCode);

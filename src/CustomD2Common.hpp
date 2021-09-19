@@ -107,20 +107,47 @@ namespace CommonD2Funcs
 		return false;
 	}
 
+
+	///auto lBlah = [](D2Stat d2Stat, D2AutoMagicTxt* ptrMagicAffixRecord, WORD wConsoleFGColor)
+	///{
+	///	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), wConsoleFGColor);
+	///	DWORD32 dwItemStatCostRecs = (*D2COMMON_sgptDataTables)->dwItemStatCostRecs;
+	///	DWORD32 dwMaxModCode = (*D2COMMON_sgptDataTables)->dwProportiesRecs;
+	///
+	///	//TODO: ptrMagicAffixRecord is sometimes null... let's check rval of D2COMMON_TXT_GetMagicAffixRecord before actually using it
+	///	if (ptrMagicAffixRecord == nullptr)
+	///		return;
+	///	if (ptrMagicAffixRecord->dwMod1Code >= dwMaxModCode)
+	///		return;
+	///
+	///	PropertiesBIN* ptrProperties = (*D2COMMON_sgptDataTables)->pPropertiesTxt + ptrMagicAffixRecord->dwMod1Code;
+	///	if (ptrProperties->stat1 >= dwItemStatCostRecs)
+	///	{
+	///		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+	///		std::cout << std::dec << static_cast<WORD>( d2Stat.id) << ':' << d2Stat.value << '/' << ptrMagicAffixRecord->dwMod1Max << std::endl;
+	///	}
+	///	else
+	///	{
+	///		doPrintAffixWeight(ptrMagicAffixRecord, d2Stat);
+	///	}
+	///	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
+	///};
+
 	__declspec(dllexport) bool __stdcall checkPropertyModContainsStat(DWORD32 modCode, WORD statID)
 	{
-		if (modCode < (*D2COMMON_sgptDataTables)->dwProportiesRecs)
-		{
-			PropertiesBIN* ptrProperties = ((*D2COMMON_sgptDataTables)->pPropertiesTxt) + modCode;
-			return	(ptrProperties->stat1 == statID) ||
-					(ptrProperties->stat2 == statID) ||
-					(ptrProperties->stat3 == statID) ||
-					(ptrProperties->stat4 == statID) ||
-					(ptrProperties->stat5 == statID) ||
-					(ptrProperties->stat6 == statID) ||
-					(ptrProperties->stat7 == statID);
-		}
-		return false;
+		if (modCode >= (*D2COMMON_sgptDataTables)->dwProportiesRecs)
+			return false;
+		if (statID >= (*D2COMMON_sgptDataTables)->dwItemStatCostRecs)
+			return false;
+
+		PropertiesBIN* ptrProperties = ((*D2COMMON_sgptDataTables)->pPropertiesTxt) + modCode;
+		return	(ptrProperties->stat1 == statID) ||
+				(ptrProperties->stat2 == statID) ||
+				(ptrProperties->stat3 == statID) ||
+				(ptrProperties->stat4 == statID) ||
+				(ptrProperties->stat5 == statID) ||
+				(ptrProperties->stat6 == statID) ||
+				(ptrProperties->stat7 == statID);
 	}
 
 	__declspec(dllexport) WORD __stdcall findModContainingStat(D2AutoMagicTxt* ptrMagicPrefixRecord, const D2Stat &stat)
@@ -130,11 +157,11 @@ namespace CommonD2Funcs
 		if (ptrMagicPrefixRecord == nullptr)
 			return rvalModCode;
 
-		if (CommonD2Funcs::checkPropertyModContainsStat(ptrMagicPrefixRecord->dwMod1Code, stat.id))
+		if (CommonD2Funcs::checkPropertyModContainsStat(ptrMagicPrefixRecord->dwMod1Code, static_cast<WORD>(stat.id)))
 			rvalModCode = ptrMagicPrefixRecord->dwMod1Code;
-		else if (CommonD2Funcs::checkPropertyModContainsStat(ptrMagicPrefixRecord->dwMod2Code, stat.id))
+		else if (CommonD2Funcs::checkPropertyModContainsStat(ptrMagicPrefixRecord->dwMod2Code, static_cast<WORD>(stat.id)))
 			rvalModCode = ptrMagicPrefixRecord->dwMod2Code;
-		else if (CommonD2Funcs::checkPropertyModContainsStat(ptrMagicPrefixRecord->dwMod3Code, stat.id))
+		else if (CommonD2Funcs::checkPropertyModContainsStat(ptrMagicPrefixRecord->dwMod3Code, static_cast<WORD>(stat.id)))
 			rvalModCode = ptrMagicPrefixRecord->dwMod3Code;
 		return rvalModCode;
 	}

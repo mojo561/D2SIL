@@ -135,6 +135,42 @@ D2VAR(D2COMMON, sgptDataTables, sgptDataTable*, 0x99E1C);
 D2VAR(D2COMMON, ptrMagicAffixTable, D2AutoMagicTxt*, 0x9FBC0);
 D2VAR(D2COMMON, ptrMagicAffixTableLength, DWORD32*, 0x9FBB8);
 
+//////////////////////////////////////////
+//TODO:
+
+/*
+	Function:		STATS_GetExpForNextLevel
+	Address:		D2Common.#10399
+	Notes:
+
+DWORD __stdcall STATS_GetExpForNextLevel(int nClass, int nLevel)
+*/
+
+/*
+	Function:		ITEMCALC_Eval
+	Address:		D2Common.#10428
+	Notes:
+
+int __stdcall ITEMCALC_Eval(D2UnitStrc* pUnit, D2UnitStrc* pItem, DWORD dwCalc)
+*/
+
+//////////////////////////////////////////
+
+/*
+	Function:		DRLG_GetRoomFromUnit
+	Address:		D2Common.#10331
+	Notes:
+*/
+D2FUNC(D2COMMON, DRLG_GetRoomFromUnit, Room*, __stdcall, (Unit* ptrUnit), -10331);
+
+/*
+	Function:		UNITS_GetOffsetX
+	Address:		D2Common.#10651
+	Notes: Items not on the ground (equipped or in inventory) will have an X offset of 0
+	TODO: D2Common.#11142 for offsetY?
+*/
+D2FUNC(D2COMMON, UNITS_GetOffsetX, int, __stdcall, (Unit* ptrUnit), -10651);
+
 /*
 	Function:		TXT_GetSetItemRecord
 	Address:		D2Common.#10218
@@ -172,7 +208,7 @@ D2FUNC(D2COMMON, ITEMS_GetRarePrefix, WORD, __stdcall, (Unit* ptrItemUnit), -103
 	Notes:
 	Returns a row index in MagicPrefix.txt
 */
-D2FUNC(D2COMMON, ITEMS_GetMagicPrefix, WORD, __stdcall, (Unit* ptrItemUnit, DWORD dwIndex), -10257);//D2FUNC(D2COMMON, ITEMS_GetMagicPrefix, WORD, __stdcall, (uintptr_t* ptrItemUnit, DWORD dwIndex), -10257);
+D2FUNC(D2COMMON, ITEMS_GetMagicPrefix, WORD, __stdcall, (Unit* ptrItemUnit, DWORD dwIndex), -10257);
 
 /*
 	Function:		TXT_GetMagicAffixRecord
