@@ -70,7 +70,7 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintItemMagicPrefix(Unit* p
 {
 	for (int i = 0; i < 3; ++i)
 	{
-		WORD wMagicPrefixCode = D2COMMON_ITEMS_GetMagicPrefix(ptrItemUnit, i);
+		WORD wMagicPrefixCode = D2COMMON_ITEMRECORDS_GetItemMagicPrefix(ptrItemUnit, i);
 		D2AutoMagicTxt* ptrMagicPrefixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicPrefixCode);
 		if (ptrMagicPrefixRecord != nullptr)
 		{
@@ -357,6 +357,9 @@ __declspec(dllexport) bool __stdcall ItemPrinter::doPrintItemStats(Unit* ptrItem
 
 __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeight(D2AutoMagicTxt* ptrMagicAffixRecord, const D2Stat &d2Stat)
 {
+	if (ptrMagicAffixRecord == nullptr)
+		return;
+
 	DWORD32 dwMaxModCode = (*D2COMMON_sgptDataTables)->dwProportiesRecs;
 	DWORD32 modCode = CommonD2Funcs::findModContainingStat(ptrMagicAffixRecord, d2Stat);
 	if (modCode < dwMaxModCode)
@@ -371,6 +374,7 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeight(D2AutoMagic
 			//test
 			do
 			{
+				std::cout << '*';
 				nStatValue = nStatValue >> bValShift;
 			} while ( (nStatValue >> bValShift) > dwModNMax);
 			//end test
@@ -393,6 +397,29 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeight(D2AutoMagic
 			std::cout << std::hex << modCode << ' ' << std::dec << static_cast<WORD>(d2Stat.id) << ' ' << d2Stat.value << ' ' << dwModNMax << std::endl;
 		}
 	}
+	//TODO: new/testing
+	//else if( ptrMagicAffixRecord->dwMod1Code < dwMaxModCode )
+	//{
+	//	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_INTENSITY);
+	//	PropertiesBIN* ptrProperties = ((*D2COMMON_sgptDataTables)->pPropertiesTxt) + ptrMagicAffixRecord->dwMod1Code;
+	//	if (ptrProperties->stat1 >= (*D2COMMON_sgptDataTables)->dwItemStatCostRecs)
+	//	{
+	//		ItemStatCostBIN* ptrISC = ((*D2COMMON_sgptDataTables)->pItemStatCostTxt) + static_cast<WORD>(d2Stat.id);
+	//
+	//		std::cout << '[' << std::hex << std::uppercase << ptrMagicAffixRecord->dwMod1Code << ']';
+	//
+	//		if (ptrISC->descstrpos > 0 && ptrISC->descstrpos != static_cast<WORD>(D2ClassicStrings::D2STR_DUMMY))
+	//		{
+	//			std::wcout << D2LANG_GetTableString(ptrISC->descstrpos) << ": ";
+	//		}
+	//		else
+	//		{
+	//			std::cout << std::dec << static_cast<WORD>(d2Stat.id) << ": ";
+	//		}
+	//		std::cout << std::dec << d2Stat.value << '/' << ptrMagicAffixRecord->dwMod1Max << std::endl;
+	//	}
+	//}
+	///////////////////
 }
 
 __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeights(Unit* ptrItemUnit)
@@ -404,8 +431,9 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeights(Unit* ptrI
 	if (ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable == nullptr)
 		return;
 
-	//PropertiesBIN* ptrModPropertyRec = nullptr;
+	DWORD32 dwModCode = 0;
 	DWORD32 dwMaxModCode = (*D2COMMON_sgptDataTables)->dwProportiesRecs;
+	DWORD32 dwMaxStatID = (*D2COMMON_sgptDataTables)->dwItemStatCostRecs;
 	WORD wItemStatTableSize = ptrItemUnit->ptStats->ptAffixStats->nbBaseStats;
 	D2Stat d2Stat = { 0 };
 	WORD wMagicAffixCode = 0;
@@ -418,34 +446,7 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeights(Unit* ptrI
 	//TODO: move this somewhere else
 	//RuleEvaluatorImpl<D2C_Stat> skipPrintRules;
 
-	//testing
-	///auto lBlah = [](D2Stat d2Stat, D2AutoMagicTxt* ptrMagicAffixRecord, WORD wConsoleFGColor)
-	///{
-	///	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), wConsoleFGColor);
-	///	DWORD32 dwItemStatCostRecs = (*D2COMMON_sgptDataTables)->dwItemStatCostRecs;
-	///	DWORD32 dwMaxModCode = (*D2COMMON_sgptDataTables)->dwProportiesRecs;
-	///
-	///	//TODO: ptrMagicAffixRecord is sometimes null... let's check rval of D2COMMON_TXT_GetMagicAffixRecord before actually using it
-	///	if (ptrMagicAffixRecord == nullptr)
-	///		return;
-	///	if (ptrMagicAffixRecord->dwMod1Code >= dwMaxModCode)
-	///		return;
-	///
-	///	PropertiesBIN* ptrProperties = (*D2COMMON_sgptDataTables)->pPropertiesTxt + ptrMagicAffixRecord->dwMod1Code;
-	///	if (ptrProperties->stat1 >= dwItemStatCostRecs)
-	///	{
-	///		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-	///		std::cout << std::dec << static_cast<WORD>( d2Stat.id) << ':' << d2Stat.value << '/' << ptrMagicAffixRecord->dwMod1Max << std::endl;
-	///	}
-	///	else
-	///	{
-	///		doPrintAffixWeight(ptrMagicAffixRecord, d2Stat);
-	///	}
-	///	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
-	///};
-	//////////
-
-	for (int i = 0; i < wItemStatTableSize; ++i)
+	/*for (int i = 0; i < wItemStatTableSize; ++i)
 	{
 		d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
 		d2Stat.value = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].value;
@@ -471,13 +472,248 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeights(Unit* ptrI
 			//lBlah(d2Stat, ptrMagicAffixRecord, FOREGROUND_PURPLE | FOREGROUND_INTENSITY);
 		}
 	}
+	*/
+/*
+	for (int i = 0; i < wItemStatTableSize; ++i)
+	{
+		d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
+		d2Stat.value = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].value;
+
+		if (static_cast<WORD>(d2Stat.id) >= dwMaxStatID)
+			continue;
+
+		bool isFoundInPrefix = false;
+		bool isFoundInSuffix = false;
+
+		for (int j = 0; j < 3; ++j)
+		{
+			//prefix
+			wMagicAffixCode = D2COMMON_ITEMS_GetMagicPrefix(ptrItemUnit, j);
+			ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
+			dwModCode = CommonD2Funcs::findModContainingStat(ptrMagicAffixRecord, d2Stat);
+			if (dwModCode < dwMaxModCode)
+			{
+				isFoundInPrefix = true;
+			}
+			if (!isFoundInPrefix)
+			{
+				//suffix
+				wMagicAffixCode = D2COMMON_ITEMRECORDS_GetItemSuffix(ptrItemUnit, j);
+				ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
+				dwModCode = CommonD2Funcs::findModContainingStat(ptrMagicAffixRecord, d2Stat);
+				if (dwModCode < dwMaxModCode)
+				{
+					isFoundInSuffix = true;
+				}
+			}
+
+			if (isFoundInPrefix || isFoundInSuffix)
+			{
+				break;
+			}
+			else
+			{
+				//
+			}
+		} //for
+
+		if (isFoundInPrefix)
+		{
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_TEAL | FOREGROUND_INTENSITY);
+			std::cout << '.';
+			doPrintAffixWeight(ptrMagicAffixRecord, d2Stat);
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
+			break;
+		}
+		else if (isFoundInSuffix)
+		{
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_PURPLE | FOREGROUND_INTENSITY);
+			std::cout << '.';
+			doPrintAffixWeight(ptrMagicAffixRecord, d2Stat);
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
+			break;
+		}
+		else if (ptrMagicAffixRecord != nullptr)
+		{
+			//prefix
+			wMagicAffixCode = D2COMMON_ITEMS_GetMagicPrefix(ptrItemUnit, 0);
+			ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
+			dwModCode = CommonD2Funcs::findModContainingStat(ptrMagicAffixRecord, d2Stat);
+			if (dwModCode >= dwMaxModCode)
+			{
+				wMagicAffixCode = D2COMMON_ITEMRECORDS_GetItemSuffix(ptrItemUnit, 0);
+				ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
+				dwModCode = CommonD2Funcs::findModContainingStat(ptrMagicAffixRecord, d2Stat);
+			}
+
+			if (dwModCode < dwMaxModCode)
+			{
+				DWORD32 dwModMax = CommonD2Funcs::findModMax(ptrMagicAffixRecord, dwModCode);
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+				std::cout << '#' << i << '[' << std::hex << std::uppercase << dwModCode << ']' << std::dec << static_cast<int>(d2Stat.id) << ':' << d2Stat.value << '/' << dwModMax << std::endl;
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
+				break;
+			}
+			else
+			{
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_INTENSITY);
+				std::cout << '#' << i << '[' << std::hex << std::uppercase << ptrMagicAffixRecord->dwMod1Code << ']' << std::dec << static_cast<int>(d2Stat.id) << ':' << d2Stat.value << '/' << ptrMagicAffixRecord->dwMod1Max << std::endl;
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
+			}
+		}
+	}
+*/
+
+	//these next for-loops: only rare items will have multiple prefixes and suffixes. magic items can only have 1 prefix and/or 1 suffix
+
+	//prefix
+	for (int i = 0; i < 3; ++i)
+	{
+		wMagicAffixCode = D2COMMON_ITEMRECORDS_GetItemMagicPrefix(ptrItemUnit, i);
+		if (wMagicAffixCode == 0)
+			break;
+
+		ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
+		if (ptrMagicAffixRecord == nullptr || ptrMagicAffixRecord->dwMod1Code >= (*D2COMMON_sgptDataTables)->dwProportiesRecs)
+		{
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_INTENSITY);
+			std::cout << "Failed to find magic affix record for affix code " << std::dec << wMagicAffixCode << std::endl;
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
+			break;
+		}
+
+		PropertiesBIN* ptrProperties = ((*D2COMMON_sgptDataTables)->pPropertiesTxt) + ptrMagicAffixRecord->dwMod1Code;
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_TEAL | FOREGROUND_INTENSITY);
+		if (ptrProperties->stat1 < dwMaxStatID)
+		{
+			//TODO: search through item stat table for stat1, stat2, etc...
+		}
+		else
+		{	//check for min, max, or percentage dmg additive stats
+			//TODO: check mod2 and mod3 codes... for example see: affixdump #1004, dmg pct is mod2!
+			D2C_Mod mod1Code = static_cast<D2C_Mod>(ptrMagicAffixRecord->dwMod1Code);
+
+			switch (mod1Code)
+			{
+			case D2C_Mod::MINDAMAGE:
+				for (int i = 0; i < wItemStatTableSize; ++i)
+				{
+					d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
+					d2Stat.value = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].value;
+					if (!RuleManager.RuleEvalStatMinDmg.evaluate(d2Stat.id))
+						continue;
+
+					std::cout << std::dec << static_cast<WORD>(d2Stat.id) << ':' << d2Stat.value << '/' << ptrMagicAffixRecord->dwMod1Max << std::endl;
+				}
+				break;
+			case D2C_Mod::MAXDAMAGE:
+				for (int i = 0; i < wItemStatTableSize; ++i)
+				{
+					d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
+					d2Stat.value = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].value;
+					if (!RuleManager.RuleEvalStatMaxDmg.evaluate(d2Stat.id))
+						continue;
+
+					std::cout << std::dec << static_cast<WORD>(d2Stat.id) << ':' << d2Stat.value << '/' << ptrMagicAffixRecord->dwMod1Max << std::endl;
+				}
+				break;
+			case D2C_Mod::WEAPONDAMAGE_PERCENT:
+				for (int i = 0; i < wItemStatTableSize; ++i)
+				{
+					d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
+					d2Stat.value = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].value;
+					if (!RuleManager.RuleEvalStatDmgPct.evaluate(d2Stat.id))
+						continue;
+
+					std::cout << std::dec << static_cast<WORD>(d2Stat.id) << ':' << d2Stat.value << '/' << ptrMagicAffixRecord->dwMod1Max << std::endl;
+				}
+				break;
+			default:
+				std::cout << '(' << std::hex <<  ptrMagicAffixRecord->dwMod1Code << ')' << std::dec << static_cast<WORD>(d2Stat.id) << ':' << d2Stat.value << std::endl;
+				break;
+			}
+		}
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
+	}
+
+
+	//suffix
+	for (int i = 0; i < 3; ++i)
+	{
+		wMagicAffixCode = D2COMMON_ITEMRECORDS_GetItemMagicSuffix(ptrItemUnit, i);
+		if (wMagicAffixCode == 0)
+			break;
+
+		ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
+		if (ptrMagicAffixRecord == nullptr || ptrMagicAffixRecord->dwMod1Code >= (*D2COMMON_sgptDataTables)->dwProportiesRecs)
+		{
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_INTENSITY);
+			std::cout << "Failed to find magic affix record for affix code " << std::dec << wMagicAffixCode << std::endl;
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
+			break;
+		}
+
+		PropertiesBIN* ptrProperties = ((*D2COMMON_sgptDataTables)->pPropertiesTxt) + ptrMagicAffixRecord->dwMod1Code;
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_PURPLE | FOREGROUND_INTENSITY);
+		if (ptrProperties->stat1 < dwMaxStatID)
+		{
+			//TODO: search through item stat table for stat1, stat2, etc...
+		}
+		else
+		{	//check for min, max, or percentage dmg additive stats
+			//TODO: check mod2 and mod3 codes... for example see: affixdump #1004, dmg pct is mod2!
+			D2C_Mod mod1Code = static_cast<D2C_Mod>(ptrMagicAffixRecord->dwMod1Code);
+
+			switch (mod1Code)
+			{
+			case D2C_Mod::MINDAMAGE:
+				for (int i = 0; i < wItemStatTableSize; ++i)
+				{
+					d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
+					d2Stat.value = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].value;
+					if (!RuleManager.RuleEvalStatMinDmg.evaluate(d2Stat.id))
+						continue;
+
+					std::cout << std::dec << static_cast<WORD>(d2Stat.id) << ':' << d2Stat.value << '/' << ptrMagicAffixRecord->dwMod1Max << std::endl;
+				}
+				break;
+			case D2C_Mod::MAXDAMAGE:
+				for (int i = 0; i < wItemStatTableSize; ++i)
+				{
+					d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
+					d2Stat.value = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].value;
+					if (!RuleManager.RuleEvalStatMaxDmg.evaluate(d2Stat.id))
+						continue;
+
+					std::cout << std::dec << static_cast<WORD>(d2Stat.id) << ':' << d2Stat.value << '/' << ptrMagicAffixRecord->dwMod1Max << std::endl;
+				}
+				break;
+			case D2C_Mod::WEAPONDAMAGE_PERCENT:
+				for (int i = 0; i < wItemStatTableSize; ++i)
+				{
+					d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
+					d2Stat.value = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].value;
+					if (!RuleManager.RuleEvalStatDmgPct.evaluate(d2Stat.id))
+						continue;
+
+					std::cout << std::dec << static_cast<WORD>(d2Stat.id) << ':' << d2Stat.value << '/' << ptrMagicAffixRecord->dwMod1Max << std::endl;
+				}
+				break;
+			default:
+				std::cout << '(' << std::hex <<  ptrMagicAffixRecord->dwMod1Code << ')' << std::dec << static_cast<WORD>(d2Stat.id) << ':' << d2Stat.value << std::endl;
+				break;
+			}
+		}
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
+	}
+
 }
 
 __declspec(dllexport) void __stdcall ItemPrinter::doPrintItemMagicSuffix(Unit* ptrItemUnit)
 {
 	for (int i = 0; i < 3; ++i)
 	{
-		WORD wMagicSuffixCode = D2COMMON_ITEMRECORDS_GetItemSuffix(ptrItemUnit, i);
+		WORD wMagicSuffixCode = D2COMMON_ITEMRECORDS_GetItemMagicSuffix(ptrItemUnit, i);
 		D2AutoMagicTxt* ptrMagicSuffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicSuffixCode);
 
 		if (ptrMagicSuffixRecord != nullptr)

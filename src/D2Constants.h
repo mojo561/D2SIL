@@ -687,33 +687,32 @@ enum class D2C_Mod : WORD
 	STATS_ITEM_AC_VS_MONSTER_MOD, //properties.txt stat1: 65535
 	STATS_ITEM_AC_PERCENT_VS_MONSTER_MOD, //properties.txt stat1: 65535
 	INDESTRUCTIBLE, //properties.txt stat1: 65535 stats: { 152 }
-	STATS_ITEM_CHARGED_SKILL_MOD
-	/*
-	extra-fire
-	extra-ltng
-	extra-cold
-	extra-pois
-	dmg-elem
-	dmg-elem-min
-	dmg-elem-max
-	all-stats
-	addxp
-	heal-kill
-	cheap
-	rip
-	att-mon%
-	dmg-mon%
-	kill-skill
-	death-skill
-	levelup-skill
-	skill-rand
-	fade
-	levelreq
-	ethereal //properties.txt stat1: 65535
-	oskill
-	state
-	randclassskill
-	*/
+	STATS_ITEM_CHARGED_SKILL_MOD,
+	//new
+	STATS_ITEM_extra_fire,
+	STATS_ITEM_extra_ltng,
+	STATS_ITEM_extra_cold,
+	STATS_ITEM_extra_pois,
+	STATS_ITEM_dmg_elem,
+	STATS_ITEM_dmg_elem_min,
+	STATS_ITEM_dmg_elem_max,
+	STATS_ITEM_all_stats,
+	STATS_ITEM_addxp,
+	STATS_ITEM_heal_kill,
+	STATS_ITEM_cheap,
+	STATS_ITEM_rip,
+	STATS_ITEM_att_monpct,
+	STATS_ITEM_dmg_monpct,
+	STATS_ITEM_kill_skill,
+	STATS_ITEM_death_skill,
+	STATS_ITEM_levelup_skill,
+	STATS_ITEM_skill_rand,
+	STATS_ITEM_fade,
+	STATS_ITEM_levelreq,
+	STATS_ITEM_ethereal, //properties.txt stat1: 65535
+	STATS_ITEM_oskill,
+	STATS_ITEM_state,
+	STATS_ITEM_randclassskill
 };
 
 /*

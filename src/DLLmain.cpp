@@ -178,9 +178,8 @@ int __stdcall DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 			//std::cout.clear();
 
 			std::cout << "=================\n";
-			std::cout << "Simple Item Logger v0.1\n";
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-			std::cout << "Now with item logging!\n";
+			std::cout << "Simple Item Logger v0.1\n";
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
 
 			std::cout << "=================\n";

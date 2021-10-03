@@ -19,6 +19,12 @@ static struct rulemgr
 	RuleEvaluatorImpl<D2C_ItemTypes> RuleEvalJunkItemType;
 	RuleEvaluatorImpl<D2C_ItemTypes> RuleEvalILvlPrint;
 
+	//TODO:new/untested
+	RuleEvaluatorImpl<D2C_Stat> RuleEvalStatMinDmg;
+	RuleEvaluatorImpl<D2C_Stat> RuleEvalStatMaxDmg;
+	RuleEvaluatorImpl<D2C_Stat> RuleEvalStatDmgPct;
+	///////////////////
+
 	//TODO: temp func for loading default rules (until txt config support)
 	void reloadRules()
 	{
@@ -51,6 +57,25 @@ static struct rulemgr
 			RuleImpl<D2C_ItemTypes>::RuleImpl(D2C_ItemTypes::ITEMTYPE_CHARM_GRAND)
 		};
 
+		//TODO:new
+		RuleImpl<D2C_Stat> minDmgStats[] = {
+			RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_MINDAMAGE),
+			RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_SECONDARY_MINDAMAGE),
+			RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_ITEM_THROW_MINDAMAGE)
+		};
+
+		RuleImpl<D2C_Stat> maxDmgStats[] = {
+			RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_MAXDAMAGE),
+			RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_SECONDARY_MAXDAMAGE),
+			RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_ITEM_THROW_MAXDAMAGE)
+		};
+
+		RuleImpl<D2C_Stat> pctDmgStats[] = {
+			RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_ITEM_MAXDAMAGE_PERCENT),
+			RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_ITEM_MINDAMAGE_PERCENT)
+		};
+		//////////
+
 		for (size_t i = 0; i < _countof(ignoreRules1); ++i)
 		{
 			RuleEvalJunkItemCode.addRule(ignoreRules1[i]);
@@ -65,6 +90,21 @@ static struct rulemgr
 		{
 			RuleEvalILvlPrint.addRule(includeRules1[i]);
 		}
+
+		//TODO: new
+		for (size_t i = 0; i < _countof(minDmgStats); ++i)
+		{
+			RuleEvalStatMinDmg.addRule(minDmgStats[i]);
+		}
+		for (size_t i = 0; i < _countof(maxDmgStats); ++i)
+		{
+			RuleEvalStatMaxDmg.addRule(maxDmgStats[i]);
+		}
+		for (size_t i = 0; i < _countof(pctDmgStats); ++i)
+		{
+			RuleEvalStatDmgPct.addRule(pctDmgStats[i]);
+		}
+		///////////
 	}
 } RuleManager;
 
@@ -106,32 +146,6 @@ namespace CommonD2Funcs
 		}
 		return false;
 	}
-
-
-	///auto lBlah = [](D2Stat d2Stat, D2AutoMagicTxt* ptrMagicAffixRecord, WORD wConsoleFGColor)
-	///{
-	///	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), wConsoleFGColor);
-	///	DWORD32 dwItemStatCostRecs = (*D2COMMON_sgptDataTables)->dwItemStatCostRecs;
-	///	DWORD32 dwMaxModCode = (*D2COMMON_sgptDataTables)->dwProportiesRecs;
-	///
-	///	//TODO: ptrMagicAffixRecord is sometimes null... let's check rval of D2COMMON_TXT_GetMagicAffixRecord before actually using it
-	///	if (ptrMagicAffixRecord == nullptr)
-	///		return;
-	///	if (ptrMagicAffixRecord->dwMod1Code >= dwMaxModCode)
-	///		return;
-	///
-	///	PropertiesBIN* ptrProperties = (*D2COMMON_sgptDataTables)->pPropertiesTxt + ptrMagicAffixRecord->dwMod1Code;
-	///	if (ptrProperties->stat1 >= dwItemStatCostRecs)
-	///	{
-	///		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-	///		std::cout << std::dec << static_cast<WORD>( d2Stat.id) << ':' << d2Stat.value << '/' << ptrMagicAffixRecord->dwMod1Max << std::endl;
-	///	}
-	///	else
-	///	{
-	///		doPrintAffixWeight(ptrMagicAffixRecord, d2Stat);
-	///	}
-	///	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
-	///};
 
 	__declspec(dllexport) bool __stdcall checkPropertyModContainsStat(DWORD32 modCode, WORD statID)
 	{
