@@ -160,6 +160,7 @@ int __stdcall ITEMCALC_Eval(D2UnitStrc* pUnit, D2UnitStrc* pItem, DWORD dwCalc)
 	Function:		DRLG_GetRoomFromUnit
 	Address:		D2Common.#10331
 	Notes:
+	this function always(?) returns null if the item is in a town.
 */
 D2FUNC(D2COMMON, DRLG_GetRoomFromUnit, Room*, __stdcall, (Unit* ptrUnit), -10331);
 

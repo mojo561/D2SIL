@@ -183,10 +183,10 @@ namespace CommonD2Funcs
 	__declspec(dllexport) DWORD32 __stdcall findModMax(D2AutoMagicTxt* ptrMagicPrefixRecord, DWORD32 dwModCode)
 	{
 		DWORD32 rvalModMax = 0;
-
+	
 		if (ptrMagicPrefixRecord == nullptr)
 			return rvalModMax;
-
+	
 		if (ptrMagicPrefixRecord->dwMod1Code == dwModCode)
 			rvalModMax = ptrMagicPrefixRecord->dwMod1Max;
 		else if (ptrMagicPrefixRecord->dwMod2Code == dwModCode)
@@ -194,6 +194,175 @@ namespace CommonD2Funcs
 		else if (ptrMagicPrefixRecord->dwMod3Code == dwModCode)
 			rvalModMax = ptrMagicPrefixRecord->dwMod3Max;
 		return rvalModMax;
+	}
+
+	__declspec(dllexport) void __stdcall doSpecDMGModPrint(DWORD32 modCode, D2AutoMagicTxt* ptrMagicAffixRecord, Unit* ptrItemUnit, DWORD32 dwMaxStatValue)
+	{
+		if (modCode >= (*D2COMMON_sgptDataTables)->dwProportiesRecs)
+			return;
+		if (ptrMagicAffixRecord == nullptr)
+			return;
+		if (ptrItemUnit == nullptr)
+			return;
+		
+		D2C_Mod mod = static_cast<D2C_Mod>(modCode);
+		D2Stat d2Stat = { 0 };
+		WORD wItemStatTableSize = ptrItemUnit->ptStats->ptAffixStats->nbBaseStats;
+
+		switch (mod)
+		{
+		case D2C_Mod::MINDAMAGE:
+			for (int i = 0; i < wItemStatTableSize; ++i)
+			{
+				d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
+				d2Stat.value = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].value;
+				if (!RuleManager.RuleEvalStatMinDmg.evaluate(d2Stat.id))
+					continue;
+
+				std::cout << std::dec << static_cast<WORD>(d2Stat.id) << ':' << d2Stat.value << '/' << dwMaxStatValue << std::endl;
+			}
+			break;
+		case D2C_Mod::MAXDAMAGE:
+			for (int i = 0; i < wItemStatTableSize; ++i)
+			{
+				d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
+				d2Stat.value = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].value;
+				if (!RuleManager.RuleEvalStatMaxDmg.evaluate(d2Stat.id))
+					continue;
+
+				std::cout << std::dec << static_cast<WORD>(d2Stat.id) << ':' << d2Stat.value << '/' << dwMaxStatValue << std::endl;
+			}
+			break;
+		case D2C_Mod::WEAPONDAMAGE_PERCENT:
+			for (int i = 0; i < wItemStatTableSize; ++i)
+			{
+				d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
+				d2Stat.value = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].value;
+				if (!RuleManager.RuleEvalStatDmgPct.evaluate(d2Stat.id))
+					continue;
+
+				std::cout << std::dec << static_cast<WORD>(d2Stat.id) << ':' << d2Stat.value << '/' << dwMaxStatValue << std::endl;
+			}
+			break;
+		default:
+			std::cout << '(' << std::hex <<  ptrMagicAffixRecord->dwMod1Code << ')' << std::dec << static_cast<WORD>(d2Stat.id) << ':' << d2Stat.value << '/' << dwMaxStatValue << std::endl;
+			break;
+		}
+	}
+
+	__declspec(dllexport) void __stdcall doModPrint(DWORD32 modCode, D2AutoMagicTxt* ptrMagicAffixRecord, Unit* ptrItemUnit, DWORD32 dwMaxStatValue)
+	{
+		if (modCode >= (*D2COMMON_sgptDataTables)->dwProportiesRecs)
+			return;
+		if (ptrMagicAffixRecord == nullptr)
+			return;
+		if (ptrItemUnit == nullptr)
+			return;
+
+		PropertiesBIN* ptrProperties = ((*D2COMMON_sgptDataTables)->pPropertiesTxt) + modCode;
+		DWORD32 dwMaxStatID = (*D2COMMON_sgptDataTables)->dwItemStatCostRecs;
+
+		if (ptrProperties->stat1 < dwMaxStatID)
+		{
+			//TODO: search through item stat table for stat1, stat2, etc...
+		}
+		else
+		{	//check for min, max, or percentage dmg additive stats
+			doSpecDMGModPrint(modCode, ptrMagicAffixRecord, ptrItemUnit, dwMaxStatValue);
+		}
+	}
+
+	/*
+		D2COMMON_ITEMRECORDS_GetItemMagicPrefix_t and D2COMMON_ITEMRECORDS_GetItemMagicSuffix_t type function pointers are acceptable here... don't use anything else
+	*/
+	__declspec(dllexport) void __stdcall doMagicAffixPrint( D2COMMON_ITEMRECORDS_GetItemMagicPrefix_t affixGetter, Unit* ptrItemUnit, WORD wConsoleColor)
+	{	//these next for-loops: only rare items will have multiple prefixes and suffixes. magic items can only have 1 prefix and/or 1 suffix.
+		//an affix can have more than one mod code
+		//some mods are repeated. the stat value applied to the item is the sum of all duplicate mods, which was already calculated by the game before this point.
+		//also: some stats are repeated, namely the + to skill(s) stats
+		//the actual stat max value needs to be computed here, all duplicate mod max values are to be tallied.
+		/*[0..3][0]: stores a valid or invalid mod code
+		[0..3][1]: stores the sum of all mod max stat values found for each duplicate mod code, or 0*/
+		std::unordered_map<DWORD32, DWORD32> dwModMaxMap;
+		WORD wMagicAffixCode = 0;
+		D2AutoMagicTxt* ptrMagicAffixRecord = nullptr;
+
+		//prefix
+		for (int i = 0; i < 3; ++i)
+		{
+			wMagicAffixCode = affixGetter(ptrItemUnit, i);
+			if (wMagicAffixCode == 0)
+				break;
+
+			ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
+			if (ptrMagicAffixRecord == nullptr || ptrMagicAffixRecord->dwMod1Code >= (*D2COMMON_sgptDataTables)->dwProportiesRecs)
+			{
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_INTENSITY);
+				std::cout << "Failed to find magic affix record for affix code " << std::dec << wMagicAffixCode << std::endl;
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
+				break;
+			}
+
+			auto modMaxRecord = dwModMaxMap.find(ptrMagicAffixRecord->dwMod1Code);
+			if (modMaxRecord != dwModMaxMap.end())
+				modMaxRecord->second += ptrMagicAffixRecord->dwMod1Max;
+			else
+				dwModMaxMap.insert(std::make_pair(ptrMagicAffixRecord->dwMod1Code, ptrMagicAffixRecord->dwMod1Max));
+
+			modMaxRecord = dwModMaxMap.find(ptrMagicAffixRecord->dwMod2Code);
+			if (modMaxRecord != dwModMaxMap.end())
+				modMaxRecord->second += ptrMagicAffixRecord->dwMod2Max;
+			else if (ptrMagicAffixRecord->dwMod2Code < (*D2COMMON_sgptDataTables)->dwProportiesRecs)
+				dwModMaxMap.insert(std::make_pair(ptrMagicAffixRecord->dwMod2Code, ptrMagicAffixRecord->dwMod2Max));
+
+			modMaxRecord = dwModMaxMap.find(ptrMagicAffixRecord->dwMod3Code);
+			if (modMaxRecord != dwModMaxMap.end())
+				modMaxRecord->second += ptrMagicAffixRecord->dwMod3Max;
+			else if (ptrMagicAffixRecord->dwMod3Code < (*D2COMMON_sgptDataTables)->dwProportiesRecs)
+				dwModMaxMap.insert(std::make_pair(ptrMagicAffixRecord->dwMod3Code, ptrMagicAffixRecord->dwMod3Max));
+
+		}
+
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), wConsoleColor | FOREGROUND_INTENSITY);
+
+		for (int i = 0; i < 3; ++i)
+		{
+			wMagicAffixCode = affixGetter(ptrItemUnit, i);
+			if (wMagicAffixCode == 0)
+				break;
+	
+			ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
+			if (ptrMagicAffixRecord == nullptr || ptrMagicAffixRecord->dwMod1Code >= (*D2COMMON_sgptDataTables)->dwProportiesRecs)
+			{
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_INTENSITY);
+				std::cout << "Failed to find magic affix record for affix code " << std::dec << wMagicAffixCode << std::endl;
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
+				break;
+			}
+
+			auto modMaxRecord = dwModMaxMap.find(ptrMagicAffixRecord->dwMod1Code);
+			if (modMaxRecord != dwModMaxMap.end())
+			{
+				doModPrint(modMaxRecord->first, ptrMagicAffixRecord, ptrItemUnit, modMaxRecord->second);
+				dwModMaxMap.erase(modMaxRecord);
+			}
+
+			modMaxRecord = dwModMaxMap.find(ptrMagicAffixRecord->dwMod2Code);
+			if (modMaxRecord != dwModMaxMap.end())
+			{
+				doModPrint(modMaxRecord->first, ptrMagicAffixRecord, ptrItemUnit, modMaxRecord->second);
+				dwModMaxMap.erase(modMaxRecord);
+			}
+
+			modMaxRecord = dwModMaxMap.find(ptrMagicAffixRecord->dwMod3Code);
+			if (modMaxRecord != dwModMaxMap.end())
+			{
+				doModPrint(modMaxRecord->first, ptrMagicAffixRecord, ptrItemUnit, modMaxRecord->second);
+				dwModMaxMap.erase(modMaxRecord);
+			}
+		}
+
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
 	}
 
 	__declspec(dllexport) UniqueItemsBIN* __stdcall getItemUniqueAffix(Unit* const ptrItemUnit)

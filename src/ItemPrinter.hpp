@@ -431,270 +431,10 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeights(Unit* ptrI
 	if (ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable == nullptr)
 		return;
 
-	DWORD32 dwModCode = 0;
-	DWORD32 dwMaxModCode = (*D2COMMON_sgptDataTables)->dwProportiesRecs;
-	DWORD32 dwMaxStatID = (*D2COMMON_sgptDataTables)->dwItemStatCostRecs;
-	WORD wItemStatTableSize = ptrItemUnit->ptStats->ptAffixStats->nbBaseStats;
-	D2Stat d2Stat = { 0 };
-	WORD wMagicAffixCode = 0;
-	D2AutoMagicTxt* ptrMagicAffixRecord = nullptr;
-
-	//Note: Some stats are repeated, namely the + to skill(s) stats 
-
 	std::cout << '\n';
 
-	//TODO: move this somewhere else
-	//RuleEvaluatorImpl<D2C_Stat> skipPrintRules;
-
-	/*for (int i = 0; i < wItemStatTableSize; ++i)
-	{
-		d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
-		d2Stat.value = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].value;
-
-		//prefix
-		for (int j = 0; j < 3; ++j)
-		{
-			wMagicAffixCode = D2COMMON_ITEMS_GetMagicPrefix(ptrItemUnit, j);
-			ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_TEAL | FOREGROUND_INTENSITY);
-			doPrintAffixWeight(ptrMagicAffixRecord, d2Stat);
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
-			//lBlah(d2Stat, ptrMagicAffixRecord, FOREGROUND_TEAL | FOREGROUND_INTENSITY);
-		}
-		//suffix
-		for (int j = 0; j < 3; ++j)
-		{
-			wMagicAffixCode = D2COMMON_ITEMRECORDS_GetItemSuffix(ptrItemUnit, j);
-			ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_PURPLE | FOREGROUND_INTENSITY);
-			doPrintAffixWeight(ptrMagicAffixRecord, d2Stat);
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
-			//lBlah(d2Stat, ptrMagicAffixRecord, FOREGROUND_PURPLE | FOREGROUND_INTENSITY);
-		}
-	}
-	*/
-/*
-	for (int i = 0; i < wItemStatTableSize; ++i)
-	{
-		d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
-		d2Stat.value = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].value;
-
-		if (static_cast<WORD>(d2Stat.id) >= dwMaxStatID)
-			continue;
-
-		bool isFoundInPrefix = false;
-		bool isFoundInSuffix = false;
-
-		for (int j = 0; j < 3; ++j)
-		{
-			//prefix
-			wMagicAffixCode = D2COMMON_ITEMS_GetMagicPrefix(ptrItemUnit, j);
-			ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
-			dwModCode = CommonD2Funcs::findModContainingStat(ptrMagicAffixRecord, d2Stat);
-			if (dwModCode < dwMaxModCode)
-			{
-				isFoundInPrefix = true;
-			}
-			if (!isFoundInPrefix)
-			{
-				//suffix
-				wMagicAffixCode = D2COMMON_ITEMRECORDS_GetItemSuffix(ptrItemUnit, j);
-				ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
-				dwModCode = CommonD2Funcs::findModContainingStat(ptrMagicAffixRecord, d2Stat);
-				if (dwModCode < dwMaxModCode)
-				{
-					isFoundInSuffix = true;
-				}
-			}
-
-			if (isFoundInPrefix || isFoundInSuffix)
-			{
-				break;
-			}
-			else
-			{
-				//
-			}
-		} //for
-
-		if (isFoundInPrefix)
-		{
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_TEAL | FOREGROUND_INTENSITY);
-			std::cout << '.';
-			doPrintAffixWeight(ptrMagicAffixRecord, d2Stat);
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
-			break;
-		}
-		else if (isFoundInSuffix)
-		{
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_PURPLE | FOREGROUND_INTENSITY);
-			std::cout << '.';
-			doPrintAffixWeight(ptrMagicAffixRecord, d2Stat);
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
-			break;
-		}
-		else if (ptrMagicAffixRecord != nullptr)
-		{
-			//prefix
-			wMagicAffixCode = D2COMMON_ITEMS_GetMagicPrefix(ptrItemUnit, 0);
-			ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
-			dwModCode = CommonD2Funcs::findModContainingStat(ptrMagicAffixRecord, d2Stat);
-			if (dwModCode >= dwMaxModCode)
-			{
-				wMagicAffixCode = D2COMMON_ITEMRECORDS_GetItemSuffix(ptrItemUnit, 0);
-				ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
-				dwModCode = CommonD2Funcs::findModContainingStat(ptrMagicAffixRecord, d2Stat);
-			}
-
-			if (dwModCode < dwMaxModCode)
-			{
-				DWORD32 dwModMax = CommonD2Funcs::findModMax(ptrMagicAffixRecord, dwModCode);
-				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-				std::cout << '#' << i << '[' << std::hex << std::uppercase << dwModCode << ']' << std::dec << static_cast<int>(d2Stat.id) << ':' << d2Stat.value << '/' << dwModMax << std::endl;
-				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
-				break;
-			}
-			else
-			{
-				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_INTENSITY);
-				std::cout << '#' << i << '[' << std::hex << std::uppercase << ptrMagicAffixRecord->dwMod1Code << ']' << std::dec << static_cast<int>(d2Stat.id) << ':' << d2Stat.value << '/' << ptrMagicAffixRecord->dwMod1Max << std::endl;
-				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
-			}
-		}
-	}
-*/
-
-	auto modPrinter = [](DWORD32 modCode, D2AutoMagicTxt* ptrMagicAffixRecord, Unit* ptrItemUnit)
-	{
-		if (modCode >= (*D2COMMON_sgptDataTables)->dwProportiesRecs)
-			return;
-		if (ptrMagicAffixRecord == nullptr)
-			return;
-		if (ptrItemUnit == nullptr)
-			return;
-		
-		DWORD32 dwModNMax = CommonD2Funcs::findModMax(ptrMagicAffixRecord, modCode);
-		D2C_Mod mod = static_cast<D2C_Mod>(modCode);
-		D2Stat d2Stat = { 0 };
-		WORD wItemStatTableSize = ptrItemUnit->ptStats->ptAffixStats->nbBaseStats;
-
-		switch (mod)
-		{
-		case D2C_Mod::MINDAMAGE:
-			for (int i = 0; i < wItemStatTableSize; ++i)
-			{
-				d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
-				d2Stat.value = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].value;
-				if (!RuleManager.RuleEvalStatMinDmg.evaluate(d2Stat.id))
-					continue;
-
-				std::cout << std::dec << static_cast<WORD>(d2Stat.id) << ':' << d2Stat.value << '/' << dwModNMax << std::endl;
-			}
-			break;
-		case D2C_Mod::MAXDAMAGE:
-			for (int i = 0; i < wItemStatTableSize; ++i)
-			{
-				d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
-				d2Stat.value = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].value;
-				if (!RuleManager.RuleEvalStatMaxDmg.evaluate(d2Stat.id))
-					continue;
-
-				std::cout << std::dec << static_cast<WORD>(d2Stat.id) << ':' << d2Stat.value << '/' << dwModNMax << std::endl;
-			}
-			break;
-		case D2C_Mod::WEAPONDAMAGE_PERCENT:
-			for (int i = 0; i < wItemStatTableSize; ++i)
-			{
-				d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
-				d2Stat.value = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].value;
-				if (!RuleManager.RuleEvalStatDmgPct.evaluate(d2Stat.id))
-					continue;
-
-				std::cout << std::dec << static_cast<WORD>(d2Stat.id) << ':' << d2Stat.value << '/' << dwModNMax << std::endl;
-			}
-			break;
-		default:
-			std::cout << '(' << std::hex <<  ptrMagicAffixRecord->dwMod1Code << ')' << std::dec << static_cast<WORD>(d2Stat.id) << ':' << d2Stat.value << '/' << dwModNMax << std::endl;
-			break;
-		}
-	};
-
-	auto modAllPrint = [&modPrinter](DWORD32 modCode, D2AutoMagicTxt* ptrMagicAffixRecord, Unit* ptrItemUnit)
-	{
-		if (modCode >= (*D2COMMON_sgptDataTables)->dwProportiesRecs)
-			return;
-		if (ptrMagicAffixRecord == nullptr)
-			return;
-		if (ptrItemUnit == nullptr)
-			return;
-
-		PropertiesBIN* ptrProperties = ((*D2COMMON_sgptDataTables)->pPropertiesTxt) + modCode;
-		DWORD32 dwMaxStatID = (*D2COMMON_sgptDataTables)->dwItemStatCostRecs;
-
-		if (ptrProperties->stat1 < dwMaxStatID)
-		{
-			//TODO: search through item stat table for stat1, stat2, etc...
-		}
-		else
-		{	//check for min, max, or percentage dmg additive stats
-			modPrinter(modCode, ptrMagicAffixRecord, ptrItemUnit);
-		}
-	};
-
-	//these next for-loops: only rare items will have multiple prefixes and suffixes. magic items can only have 1 prefix and/or 1 suffix.
-	//an affix can have more than one mod code
-
-	//prefix
-	for (int i = 0; i < 3; ++i)
-	{
-		wMagicAffixCode = D2COMMON_ITEMRECORDS_GetItemMagicPrefix(ptrItemUnit, i);
-		if (wMagicAffixCode == 0)
-			break;
-
-		ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
-		if (ptrMagicAffixRecord == nullptr || ptrMagicAffixRecord->dwMod1Code >= (*D2COMMON_sgptDataTables)->dwProportiesRecs)
-		{
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_INTENSITY);
-			std::cout << "Failed to find magic affix record for affix code " << std::dec << wMagicAffixCode << std::endl;
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
-			break;
-		}
-
-		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_TEAL | FOREGROUND_INTENSITY);
-
-		modAllPrint(ptrMagicAffixRecord->dwMod1Code, ptrMagicAffixRecord, ptrItemUnit);
-		modAllPrint(ptrMagicAffixRecord->dwMod2Code, ptrMagicAffixRecord, ptrItemUnit);
-		modAllPrint(ptrMagicAffixRecord->dwMod3Code, ptrMagicAffixRecord, ptrItemUnit);
-
-		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
-	}
-
-
-	//suffix
-	for (int i = 0; i < 3; ++i)
-	{
-		wMagicAffixCode = D2COMMON_ITEMRECORDS_GetItemMagicSuffix(ptrItemUnit, i);
-		if (wMagicAffixCode == 0)
-			break;
-
-		ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
-		if (ptrMagicAffixRecord == nullptr || ptrMagicAffixRecord->dwMod1Code >= (*D2COMMON_sgptDataTables)->dwProportiesRecs)
-		{
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_INTENSITY);
-			std::cout << "Failed to find magic affix record for affix code " << std::dec << wMagicAffixCode << std::endl;
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
-			break;
-		}
-
-		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_PURPLE | FOREGROUND_INTENSITY);
-
-		modAllPrint(ptrMagicAffixRecord->dwMod1Code, ptrMagicAffixRecord, ptrItemUnit);
-		modAllPrint(ptrMagicAffixRecord->dwMod2Code, ptrMagicAffixRecord, ptrItemUnit);
-		modAllPrint(ptrMagicAffixRecord->dwMod3Code, ptrMagicAffixRecord, ptrItemUnit);
-		
-		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
-	}
-
+	CommonD2Funcs::doMagicAffixPrint(D2COMMON_ITEMRECORDS_GetItemMagicPrefix, ptrItemUnit, FOREGROUND_TEAL);
+	CommonD2Funcs::doMagicAffixPrint(D2COMMON_ITEMRECORDS_GetItemMagicSuffix, ptrItemUnit, FOREGROUND_PURPLE);
 }
 
 __declspec(dllexport) void __stdcall ItemPrinter::doPrintItemMagicSuffix(Unit* ptrItemUnit)
@@ -903,11 +643,17 @@ __declspec(dllexport) void __fastcall ItemPrinter::doPrintItemName(Unit* ptrItem
 	if (ptrItemUnit->nUnitType != static_cast<DWORD32>(D2C_UnitType::UNIT_ITEM))
 		return;
 
-	//TODO: new / testing.
-	//this function always(?) returns null if the item is in a town. This test should fix log spamming while shopping
+	int dwQuality = D2COMMON_ITEMS_GetQuality(ptrItemUnit);
+	D2C_ItemQuality itemQuality = static_cast<D2C_ItemQuality>(dwQuality);
+
+	//This test should fix log spamming while shopping
 	if (D2COMMON_DRLG_GetRoomFromUnit(ptrItemUnit) == nullptr)
+	{
+		if(itemQuality != D2C_ItemQuality::ITEMQUALITY_RARE &&
+			itemQuality != D2C_ItemQuality::ITEMQUALITY_UNIQUE)
 		return;
-	///////////////
+	}
+
 
 	DWORD dwItemCode = D2COMMON_ITEMRECORDS_GetCodeFromUnit(ptrItemUnit);
 	D2C_ItemCodes itemCode = static_cast<D2C_ItemCodes>(dwItemCode);
@@ -923,9 +669,7 @@ __declspec(dllexport) void __fastcall ItemPrinter::doPrintItemName(Unit* ptrItem
 	if (isJunkItem)
 		return;
 
-	//copying from the disasm...
-	int dwQuality = D2COMMON_ITEMS_GetQuality(ptrItemUnit);
-	D2C_ItemQuality itemQuality = static_cast<D2C_ItemQuality>(dwQuality);
+
 	BYTE isNormal = D2COMMON_ITEMTYPERECORDS_GetNormal(ptrItemUnit);
 	if (!isNormal)
 	{
@@ -981,6 +725,8 @@ __declspec(dllexport) void __fastcall ItemPrinter::doPrintItemName(Unit* ptrItem
 			doPrintItemRareAffix(ptrItemUnit);
 			//TODO: testing
 			//printAffixWeights(ptrItemUnit);
+			doPrintItemMagicPrefix(ptrItemUnit);
+			doPrintItemMagicSuffix(ptrItemUnit);
 			///////////////
 			break;
 		case D2C_ItemQuality::ITEMQUALITY_UNIQUE:
