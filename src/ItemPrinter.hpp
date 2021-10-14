@@ -344,8 +344,6 @@ __declspec(dllexport) bool __stdcall ItemPrinter::doPrintItemStats(Unit* ptrItem
 				wchar_t buffer[nBufferLen] = { 0 };
 				CommonD2Funcs::getItemAffixText(ptrItemUnit, szAffixTextBuffer);
 				wcscpy_s(buffer, nBufferLen, szAffixTextBuffer);
-				std::wcout << ". . . . ." << std::endl;
-				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE | FOREGROUND_INTENSITY);
 				std::wcout << buffer;
 				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
 				return true;
@@ -433,8 +431,7 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeights(Unit* ptrI
 
 	std::cout << '\n';
 
-	CommonD2Funcs::doMagicAffixPrint(D2COMMON_ITEMRECORDS_GetItemMagicPrefix, ptrItemUnit, FOREGROUND_TEAL);
-	CommonD2Funcs::doMagicAffixPrint(D2COMMON_ITEMRECORDS_GetItemMagicSuffix, ptrItemUnit, FOREGROUND_PURPLE);
+	CommonD2Funcs::doMagicAffixPrint(ptrItemUnit);
 }
 
 __declspec(dllexport) void __stdcall ItemPrinter::doPrintItemMagicSuffix(Unit* ptrItemUnit)
@@ -721,7 +718,10 @@ __declspec(dllexport) void __fastcall ItemPrinter::doPrintItemName(Unit* ptrItem
 			doPrintItemSetAffix(ptrItemUnit);
 			break;
 		case D2C_ItemQuality::ITEMQUALITY_RARE:
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_INTENSITY);
+			std::cout << '#' << std::dec << ++UniqueItemCounter;
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_YELLOW | FOREGROUND_INTENSITY);
+			std::cout << ' ';
 			doPrintItemRareAffix(ptrItemUnit);
 			//TODO: testing
 			//printAffixWeights(ptrItemUnit);

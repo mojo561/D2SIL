@@ -281,12 +281,12 @@ ITEMFLAG_RUNEWORD               = 0x04000000
 	DWORD32	uniqueID;					//+28
 	BYTE	ilvl;						//+2C
 	BYTE	uk1[0x03];					//+2D
-	WORD	version;					//+30
+	WORD	version;					//+30 not sure what this is... looks like it's always set to 101?
 	WORD	rarePrefix;					//+32
 	WORD	rareSuffix;					//+34
-	WORD	autoPref;					//+36
-	WORD	prefix[3];					//+38
-	WORD	suffix[3];					//+3E
+	WORD	autoPref;					//+36 this does not include staff mods
+	WORD	prefix[3];					//+38 pretty sure this is specific for magic affixes for magic / rare / unique items only
+	WORD	suffix[3];					//+3E pretty sure this is specific for magic affixes for magic / rare / unique items only
 	BYTE	equipLoc;					//+44
     /*	emplacement si équipé
 	*	00 = noequip/inBelt

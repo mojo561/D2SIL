@@ -157,6 +157,14 @@ int __stdcall ITEMCALC_Eval(D2UnitStrc* pUnit, D2UnitStrc* pItem, DWORD dwCalc)
 //////////////////////////////////////////
 
 /*
+	Function:		D2COMMON_GetMagicAffixTable
+	Address:		D2Common.#10492
+	Notes:
+	returns ptr to DWORD magic affix table length. Add to this ptr to get prefix (+0xC) suffix (+8), or automagic(+0x10) tables
+*/
+D2FUNC(D2COMMON, GetMagicAffixTable, void*, __stdcall, (void), -10492);
+
+/*
 	Function:		DRLG_GetRoomFromUnit
 	Address:		D2Common.#10331
 	Notes:
@@ -359,7 +367,7 @@ D2FUNC(D2COMMON, ITEMTYPERECORDS_GetNormal, BYTE, __stdcall, (Unit* ptrItemUnit)
 	Address:		D2Common.#10620
 	Notes:
 	returns (int)pItem[0x28] (ptrUnit->dwInitSeed).
-	This value is used for functions such as d2common_10961 (with fileIndex stored in eax, d2common_10961 returns char ptr to Dword(off_6FDEFD9C)+(0x22*EAX), or null if EAX >= value stored in dword_6FDEFD98 (usually 4))
+	This value is used for functions such as d2common_10961 (with fileIndex stored in eax, d2common_10961 returns char ptr to Dword(D2Common+9FD9C)+(0x22*EAX), or null if EAX >= value stored in dword_6FDEFD98 (usually 4))
 	Return values are used differently depending on the item (does not denote item quality), a negative result indicates failure
 */
 D2FUNC(D2COMMON, ITEMS_GetFileIndex, int, __stdcall, (Unit* ptrItemUnit), -10620);
