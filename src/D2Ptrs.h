@@ -157,6 +157,14 @@ int __stdcall ITEMCALC_Eval(D2UnitStrc* pUnit, D2UnitStrc* pItem, DWORD dwCalc)
 //////////////////////////////////////////
 
 /*
+	Function:		ITEMRECORDS_GetItemQualityRecord
+	Address:		D2Common.#11007
+	Notes:
+	TODO: new / untested
+*/
+D2FUNC(D2COMMON, ITEMRECORDS_GetItemQualityRecord, QualityItemsTXT*, __stdcall, (DWORD32 dwItemQualityIndex), -11007);
+
+/*
 	Function:		D2COMMON_GetMagicAffixTable
 	Address:		D2Common.#10492
 	Notes:

@@ -10,6 +10,8 @@ static const WORD FOREGROUND_TEAL = FOREGROUND_BLUE | FOREGROUND_GREEN;
 static const WORD FOREGROUND_PURPLE = FOREGROUND_RED | FOREGROUND_BLUE;
 //FOREGROUND_GREEN | FOREGROUND_RED
 static const WORD FOREGROUND_YELLOW = FOREGROUND_GREEN | FOREGROUND_RED;
+//BACKGROUND_RED | BACKGROUND_RED
+static const WORD BACKGROUND_YELLOW = BACKGROUND_RED | BACKGROUND_RED;
 
 ///////////
 
@@ -18,12 +20,10 @@ static struct rulemgr
 	RuleEvaluatorImpl<D2C_ItemCodes> RuleEvalJunkItemCode;
 	RuleEvaluatorImpl<D2C_ItemTypes> RuleEvalJunkItemType;
 	RuleEvaluatorImpl<D2C_ItemTypes> RuleEvalILvlPrint;
-
-	//TODO:new/untested
 	RuleEvaluatorImpl<D2C_Stat> RuleEvalStatMinDmg;
 	RuleEvaluatorImpl<D2C_Stat> RuleEvalStatMaxDmg;
 	RuleEvaluatorImpl<D2C_Stat> RuleEvalStatDmgPct;
-	///////////////////
+	RuleEvaluatorImpl<D2C_Stat> RuleRvalUnprintableStats;
 
 	//TODO: temp func for loading default rules (until txt config support)
 	void reloadRules()
@@ -57,7 +57,6 @@ static struct rulemgr
 			RuleImpl<D2C_ItemTypes>::RuleImpl(D2C_ItemTypes::ITEMTYPE_CHARM_GRAND)
 		};
 
-		//TODO:new
 		RuleImpl<D2C_Stat> minDmgStats[] = {
 			RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_MINDAMAGE),
 			RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_SECONDARY_MINDAMAGE),
@@ -74,7 +73,17 @@ static struct rulemgr
 			RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_ITEM_MAXDAMAGE_PERCENT),
 			RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_ITEM_MINDAMAGE_PERCENT)
 		};
-		//////////
+
+		//TODO: new
+		RuleImpl<D2C_Stat> unprintStats[] = {
+			RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_ITEM_SINGLESKILL),
+			//RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_POISONMINDAM),
+			//RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_POISONMAXDAM),
+			RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_POISONLENGTH),
+			RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_POISON_COUNT),
+			RuleImpl<D2C_Stat>::RuleImpl(D2C_Stat::STATS_COLDLENGTH)
+		};
+		///////////
 
 		for (size_t i = 0; i < _countof(ignoreRules1); ++i)
 		{
@@ -91,7 +100,6 @@ static struct rulemgr
 			RuleEvalILvlPrint.addRule(includeRules1[i]);
 		}
 
-		//TODO: new
 		for (size_t i = 0; i < _countof(minDmgStats); ++i)
 		{
 			RuleEvalStatMinDmg.addRule(minDmgStats[i]);
@@ -104,7 +112,12 @@ static struct rulemgr
 		{
 			RuleEvalStatDmgPct.addRule(pctDmgStats[i]);
 		}
-		///////////
+
+		//TODO: new
+		for (size_t i = 0; i < _countof(unprintStats); ++i)
+		{
+			RuleRvalUnprintableStats.addRule(unprintStats[i]);
+		}
 	}
 } RuleManager;
 
@@ -149,9 +162,9 @@ namespace CommonD2Funcs
 
 	__declspec(dllexport) bool __stdcall checkPropertyModContainsStat(DWORD32 modCode, WORD statID)
 	{
-		if (modCode >= (*D2COMMON_sgptDataTables)->dwProportiesRecs)
+		if (modCode >= _D2C_dwMaxMod)
 			return false;
-		if (statID >= (*D2COMMON_sgptDataTables)->dwItemStatCostRecs)
+		if (statID >= _D2C_dwMaxStat)
 			return false;
 
 		PropertiesBIN* ptrProperties = ((*D2COMMON_sgptDataTables)->pPropertiesTxt) + modCode;
@@ -198,7 +211,7 @@ namespace CommonD2Funcs
 
 	__declspec(dllexport) void __stdcall doSpecDMGModPrint(DWORD32 modCode, D2AutoMagicTxt* ptrMagicAffixRecord, Unit* ptrItemUnit, DWORD32 dwMaxStatValue)
 	{
-		if (modCode >= (*D2COMMON_sgptDataTables)->dwProportiesRecs)
+		if (modCode >= _D2C_dwMaxMod)
 			return;
 		if (ptrMagicAffixRecord == nullptr)
 			return;
@@ -276,7 +289,7 @@ namespace CommonD2Funcs
 
 	__declspec(dllexport) void __stdcall doModPrint(DWORD32 modCode, D2AutoMagicTxt* ptrMagicAffixRecord, Unit* ptrItemUnit, DWORD32 dwMaxStatValue)
 	{
-		if (modCode >= (*D2COMMON_sgptDataTables)->dwProportiesRecs)
+		if (modCode >= _D2C_dwMaxMod)
 			return;
 		if (ptrMagicAffixRecord == nullptr)
 			return;
@@ -284,7 +297,7 @@ namespace CommonD2Funcs
 			return;
 
 		PropertiesBIN* ptrProperties = ((*D2COMMON_sgptDataTables)->pPropertiesTxt) + modCode;
-		DWORD32 dwMaxStatID = (*D2COMMON_sgptDataTables)->dwItemStatCostRecs;
+		DWORD32 dwMaxStatID = _D2C_dwMaxStat;
 
 		if (ptrProperties->stat1 < dwMaxStatID)
 		{	//search through item stat table for stat1, stat2, etc...
@@ -447,6 +460,32 @@ namespace CommonD2Funcs
 	}
 */
 
+	__declspec(dllexport) bool __stdcall checkIfItemElite(DWORD32 dwItemCode)
+	{
+		int dwFileIndex = D2COMMON_ITEMRECORDS_GetItemIndexFromCode(dwItemCode); //D2COMMON_ITEMS_GetFileIndex(ptrItemUnit);
+		if (dwFileIndex != 0)
+		{
+			D2ItemsTxt* d2it = D2COMMON_ITEMRECORDS_GetItemRecord(dwFileIndex);
+			if (d2it != nullptr)
+			{
+				if (dwItemCode == d2it->dwUltraCode)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	__declspec(dllexport) UniqueItemsBIN* __stdcall getItemUniqueAffix(Unit* const ptrItemUnit)
+	{
+		DWORD32 nUniqueIndex = D2COMMON_ITEMS_GetFileIndex(ptrItemUnit);
+		if (nUniqueIndex == 0)
+			return nullptr;
+		if (nUniqueIndex >= (*D2COMMON_sgptDataTables)->dwUniqItemsRecs)
+			return nullptr;
+		return ((*D2COMMON_sgptDataTables)->pUniqueItemsTxt) + nUniqueIndex;
+	}
 
 	__declspec(dllexport) void __stdcall doMagicAffixPrint(Unit* ptrItemUnit)
 	{	//only rare items will have multiple prefixes and suffixes. magic items can only have 1 prefix and/or 1 suffix unless they were socketed (ignoring socketed magic items for now).
@@ -465,7 +504,10 @@ namespace CommonD2Funcs
 		if (ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable == nullptr)
 			return;
 
-		DWORD32 dwMaxStatID = (*D2COMMON_sgptDataTables)->dwItemStatCostRecs;
+		int dwQuality = D2COMMON_ITEMS_GetQuality(ptrItemUnit);
+		D2C_ItemQuality itemQuality = static_cast<D2C_ItemQuality>(dwQuality);
+
+		DWORD32 dwMaxStatID = _D2C_dwMaxStat;
 		D2Stat d2Stat = { 0 };
 
 		//total number of unique stats added to the item via mods/affixes
@@ -493,14 +535,12 @@ namespace CommonD2Funcs
 		std::array<WORD, dwPropertyStatTableLength> arrPropertyStatTable;
 
 		auto doMergeStatTable = [&arrPropertyStatTable, &mapPropertyStatMaxTable](DWORD32 dwModCode, DWORD32 dwModNMax) {
-			static const DWORD32 dwModMax = (*D2COMMON_sgptDataTables)->dwProportiesRecs;
-
-			if (dwModCode >= dwModMax)
+			if (dwModCode >= _D2C_dwMaxMod)
 				return;
 
 			PropertiesBIN* ptrProperties = ((*D2COMMON_sgptDataTables)->pPropertiesTxt) + dwModCode;
 			
-			if (ptrProperties->stat1 >= (*D2COMMON_sgptDataTables)->dwItemStatCostRecs)
+			if (ptrProperties->stat1 >= _D2C_dwMaxStat)
 			{	//dmg related mod
 				arrPropertyStatTable.fill( ptrProperties->stat1 );
 				D2C_Mod d2cMod = static_cast<D2C_Mod>(dwModCode);
@@ -537,12 +577,20 @@ namespace CommonD2Funcs
 			}
 			for (size_t j = 0; j < dwPropertyStatTableLength; ++j)
 			{
-			//	if (arrPropertyStatTable[j] >= (*D2COMMON_sgptDataTables)->dwItemStatCostRecs)
-			//		break;
-
 				auto record = mapPropertyStatMaxTable.find(arrPropertyStatTable[j]);
 				if (record != mapPropertyStatMaxTable.end())
+				{
 					record->second += dwModNMax;
+				}
+				else if (arrPropertyStatTable[j] >= _D2C_dwMaxStat)
+				{
+					break;
+				}
+				else
+				{	//TODO: this seems to happen regularly..
+					std::cout << "Missed " << std::dec << arrPropertyStatTable[j] << ", adding with modNMax " << dwModNMax << std::endl;
+					mapPropertyStatMaxTable.insert(std::make_pair(arrPropertyStatTable[j], dwModNMax));
+				}
 			}
 		};
 
@@ -554,7 +602,7 @@ namespace CommonD2Funcs
 					break;
 
 				D2AutoMagicTxt* ptrMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(wMagicAffixCode);
-				if (ptrMagicAffixRecord == nullptr || ptrMagicAffixRecord->dwMod1Code >= (*D2COMMON_sgptDataTables)->dwProportiesRecs)
+				if (ptrMagicAffixRecord == nullptr || ptrMagicAffixRecord->dwMod1Code >= _D2C_dwMaxMod)
 					break;
 
 				doMergeStatTable(ptrMagicAffixRecord->dwMod1Code, ptrMagicAffixRecord->dwMod1Max);
@@ -563,69 +611,90 @@ namespace CommonD2Funcs
 			}
 		};
 
-		//prefix...
-		dofillTable(D2COMMON_ITEMRECORDS_GetItemMagicPrefix, ptrItemUnit);
-		//suffix...
-		dofillTable(D2COMMON_ITEMRECORDS_GetItemMagicSuffix, ptrItemUnit);
+		if (itemQuality == D2C_ItemQuality::ITEMQUALITY_SET)
+		{
+			SetItemsBIN* ptrSetItemRecord = D2COMMON_TXT_GetSetItemRecord(ptrItemUnit);
+			if (ptrSetItemRecord != nullptr)
+			{
+				DWORD32* ptrSetItemProp1Base = &ptrSetItemRecord->dwProp1;
+				for (int i = 0; i < 9; ++i)
+				{
+					DWORD32* ptrSetItemPropNBase = ptrSetItemProp1Base + (i * 4);
+					DWORD32 dwPropNModCode = *ptrSetItemPropNBase;
+					DWORD32 dwMaxN = *(ptrSetItemPropNBase + 3);
 
+					if (dwPropNModCode >= _D2C_dwMaxMod)
+						break;
 
-		/*
-		TODO: still broken...? actually no
-		+3 to Mana after each Kill
-		+37 to Attack Rating
-		+1 to Maximum Damage
-		+2 to Minimum Damage
-		5% Chance to cast level 1 Amplify Damage on striking
-		Brimstone Thirst! [984]Bronze [1164]Victorious [1003]Sharp  of Damage Amplification[661] of Worth[222]Short Sword
-		19:37/40
-		21:2/2
-		22:1/0
-		138:3/5
-		198:5/1
+					doMergeStatTable(dwPropNModCode, dwMaxN);
+				}
+			}
+		}
+		else if (itemQuality == D2C_ItemQuality::ITEMQUALITY_UNIQUE)
+		{
+			UniqueItemsBIN* ptrUniqueItemRecord = getItemUniqueAffix(ptrItemUnit);
+			if (ptrUniqueItemRecord != nullptr)
+			{
+				DWORD32* ptrUniqueItemProp1Base = &ptrUniqueItemRecord->dwProp1ModCode;
+				for (int i = 0; i < 12; ++i)
+				{
+					DWORD32* ptrUniqueItemPropNBase = ptrUniqueItemProp1Base + (i * 4);
+					DWORD32 dwPropNModCode = *ptrUniqueItemPropNBase;
+					DWORD32 dwMaxN = *(ptrUniqueItemPropNBase + 3);
 
-		984		'Bronze'					0x6E	0x6DB	0xF::(0)[10.20]
-		1164	'Victorious'				0x79	0x514B	0x6E::(0)[2.5]
-		1003	'Sharp'						0x6F	0x6E2	0xF::(0)[10.20]	0x1D::(0)[10.20]
-		661		'of Damage Amplification'	0x2C	0x5273	0x7F::(66)[5.1]
-		222		'of Worth'					0xF		0x751	0x1B::(0)[1.2]
+					if (dwPropNModCode >= _D2C_dwMaxMod)
+						break;
 
-		stat 22 seems to be an inherent stat of a Short Sword...
+					doMergeStatTable(dwPropNModCode, dwMaxN);
+				}
+			}
+		}
+		else
+		{
+			dofillTable(D2COMMON_ITEMRECORDS_GetItemMagicPrefix, ptrItemUnit);
+			dofillTable(D2COMMON_ITEMRECORDS_GetItemMagicSuffix, ptrItemUnit);
+		}
 
-		an example of an inherent stat:
-		 #793
-		+6% Enhanced Defense
-		Superior Linked Mail
-		16:6/0
+		//automagic affix... move to it's own function?
+		ItemData* ptrItemData = ptrItemUnit->ptItemData;
+		if (ptrItemData != nullptr)
+		{
+			WORD wAutoMagicAffixCode = ptrItemData->autoPref;
+			DWORD32 dwQualityItemsIndexCode = ptrItemData->uniqueID;
+			if (itemQuality == D2C_ItemQuality::ITEMQUALITY_SUPERIOR)
+			{	//check in QualityItems.txt
+				QualityItemsTXT* blah = D2COMMON_ITEMRECORDS_GetItemQualityRecord(dwQualityItemsIndexCode);
+				if (blah != nullptr)
+				{
+					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE | FOREGROUND_INTENSITY);
+					std::cout << blah->szEffect1 << std::endl;
+					if(blah->wNumMods == 2)
+						std::cout << blah->szEffect2 << std::endl;
 
-		a max value of 0 does not necessarily mean that the stat is inherent to the item:
-		 #31
-		+50% Damage to Undead
-		6% Mana stolen per hit
-		+1501 to Attack Rating (Based on Character Level)
-		+45 to Maximum Damage (Based on Character Level)
-		[1272]Trump Mace of the Wraith[359](24)
-		62:6/7
-		218:4/0
-		224:33/0
+					//TODO: sometimes modNMax is 0...?
+					/*
+					+1 to Maximum Damage
+					[5S]Superior Long Bow
+					improved damage
+					[1]24:1/0
+					*/
 
-		and some sheilds with inherent res stats..
-		Poison Length Reduced by 75%
-		Poison Resist +41%
-		Fire Resist +17%
-		Lightning Resist +30%
-		Cold Resist +17%
-		+73% Enhanced Defense
-		+17% Faster Hit Recovery
-		#1Bitter Mark! [894]Saintly [1158]Jade [1136]Ocher  of Equilibrium[262] of Defiance[365]Aerin Shield
-		16:73/80
-		39:17/0
-		41:30/20
-		43:17/0
-		45:41/30
-		99:17/17
-		110:75/75
-
-		*/
+					doMergeStatTable(blah->dwMod1Code, blah->dwMod1Max);
+					doMergeStatTable(blah->dwMod2Code, blah->dwMod2Max);
+				}
+			}
+			if (wAutoMagicAffixCode != 0)
+			{	//check for automagic affix record
+				D2AutoMagicTxt* ptrAutoMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(ptrItemData->autoPref);
+				if (ptrAutoMagicAffixRecord != nullptr)
+				{
+					doMergeStatTable(ptrAutoMagicAffixRecord->dwMod1Code, ptrAutoMagicAffixRecord->dwMod1Max);
+					doMergeStatTable(ptrAutoMagicAffixRecord->dwMod2Code, ptrAutoMagicAffixRecord->dwMod2Max);
+					doMergeStatTable(ptrAutoMagicAffixRecord->dwMod3Code, ptrAutoMagicAffixRecord->dwMod3Max);
+				}
+			}
+		}
+		//////////////////////////////////////////////////////////
 
 		for (int i = 0; i < wItemStatTableSize; ++i)
 		{
@@ -634,131 +703,102 @@ namespace CommonD2Funcs
 			//ptrItemUnit->ptStats->ptNextStats2 : nope
 			d2Stat.id = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].id;
 			d2Stat.value = ptrItemUnit->ptStats->ptAffixStats->ptBaseStatsTable[i].value;
-			if (static_cast<WORD>(d2Stat.id) < dwMaxStatID)
+			if (static_cast<WORD>(d2Stat.id) >= dwMaxStatID)
+				continue;
+
+			auto record = mapPropertyStatMaxTable.find(static_cast<WORD>(d2Stat.id));
+			if (record == mapPropertyStatMaxTable.end())
+				continue;
+
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+			//TODO: RuleRvalUnprintableStats holds ALL non-printable stats... are there any that we actually want to check here?
+			if (record->second == 0 && !RuleManager.RuleRvalUnprintableStats.evaluate(static_cast<D2C_Stat>(record->first)))
 			{
-				auto record = mapPropertyStatMaxTable.find(static_cast<WORD>(d2Stat.id));
-				if (record != mapPropertyStatMaxTable.end())
+				//SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_YELLOW | FOREGROUND_INTENSITY);
+				//std::cout << "ptrItemUnit->ptStats->ptAffixStats->ptStats: 0x" << std::hex << std::uppercase << ptrItemUnit->ptStats->ptAffixStats->ptStats << std::endl;
+				//std::cout << "ptrItemUnit->ptStats->ptAffixStats->ptItemStats: 0x" << std::hex << std::uppercase << ptrItemUnit->ptStats->ptAffixStats->ptItemStats << std::endl;
+				//std::cout << "ptrItemUnit->ptStats->ptNextStats2: 0x" << std::hex << std::uppercase << ptrItemUnit->ptStats->ptNextStats2 << std::endl;
+				//SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+				/*Stats* ptrItemStats = ptrItemUnit->ptStats->ptAffixStats->ptItemStats;
+				if (ptrItemStats != nullptr)
 				{
+					WORD wItemInherentStatTableSize = ptrItemStats->nbBaseStats;
+					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_YELLOW | FOREGROUND_INTENSITY);
+					std::cout << std::dec << wItemInherentStatTableSize << std::endl;
 					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-					if (record->second == 0)
-					{
-						//SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_YELLOW | FOREGROUND_INTENSITY);
-						//std::cout << "ptrItemUnit->ptStats->ptAffixStats->ptStats: 0x" << std::hex << std::uppercase << ptrItemUnit->ptStats->ptAffixStats->ptStats << std::endl;
-						//std::cout << "ptrItemUnit->ptStats->ptAffixStats->ptItemStats: 0x" << std::hex << std::uppercase << ptrItemUnit->ptStats->ptAffixStats->ptItemStats << std::endl;
-						//std::cout << "ptrItemUnit->ptStats->ptNextStats2: 0x" << std::hex << std::uppercase << ptrItemUnit->ptStats->ptNextStats2 << std::endl;
-						//SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-						/*Stats* ptrItemStats = ptrItemUnit->ptStats->ptAffixStats->ptItemStats;
-						if (ptrItemStats != nullptr)
+				}*/
+				/*
+				almost works
+				there are other inherent item mods though:
+
+				All Resistances +5
+				Damaged Damaged Rondache
+				2
+				39:5/0
+				2
+				41:5/0
+				2
+				43:5/0
+				2
+				45:5/0
+
+				hmmm...
+
+				+89 to Attack Rating
+				+41% Enhanced Damage
+				Protector Shield
+				0,0,0
+				17:41/0
+				0,0,0
+				18:41/0
+				0,0,0
+				19:89/0
+
+
+				this works, because it's specifically superior?
+				+10% Enhanced Defense
+				Superior Antlers
+				2,0,0
+				16:10/0
+				*/
+
+				ItemData* ptrItemData = ptrItemUnit->ptItemData;
+				if (ptrItemData != nullptr)
+				{
+					int dwQuality = D2COMMON_ITEMS_GetQuality(ptrItemUnit);
+					D2C_ItemQuality itemQuality = static_cast<D2C_ItemQuality>(dwQuality);
+
+					if (itemQuality == D2C_ItemQuality::ITEMQUALITY_SUPERIOR)
+					{	//check in QualityItems.txt
+						SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE | FOREGROUND_INTENSITY);
+						//std::cout << '[' << std::dec << ptrItemData->uniqueID << ']';
+						DWORD32 dwQualityItemsIndexCode = ptrItemData->uniqueID;
+						QualityItemsTXT* blah = D2COMMON_ITEMRECORDS_GetItemQualityRecord(dwQualityItemsIndexCode);
+						//std::cout << '[' << std::hex << std::uppercase << blah << ']';
+						std::cout << '[' << std::hex << std::uppercase << blah->dwMod1Code << ']';
+						std::cout << '[' << std::dec << blah->dwMod1Min << '-' << blah->dwMod1Max << ']';
+					}
+					//void* wtfIsThis = D2COMMON_GetMagicAffixTable(); //works...
+					if (ptrItemData->autoPref != 0)
+					{	//additional stats (other than staff mods) max values can be computed here (examples: affixdump10.1434 and 1436 == + to mana, and! affixdump10.1442 for a Rondache!, affixdump10.1424 for Elite Matriarchal Javelin)
+						//this works, but let's move this code somewhere else where all other computations are done
+						D2AutoMagicTxt* ptrAutoMagicRecord = D2COMMON_TXT_GetMagicAffixRecord(ptrItemData->autoPref);
+						if (ptrAutoMagicRecord != nullptr)
 						{
-							WORD wItemInherentStatTableSize = ptrItemStats->nbBaseStats;
 							SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_YELLOW | FOREGROUND_INTENSITY);
-							std::cout << std::dec << wItemInherentStatTableSize << std::endl;
-							SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-						}*/
-						/*
-						almost works
-						+50% Damage to Undead
-						Increase Maximum Durability 14%
-						+2 to Attack Rating
-						Superior Mace
-						5 (index in qualityitems.txt)
-						19:2/0
-						5 (index in qualityitems.txt)
-						75:14/0
-						
-						
-						there are other inherent item mods though:
-
-						All Resistances +5
-						Damaged Damaged Rondache
-						2
-						39:5/0
-						2
-						41:5/0
-						2
-						43:5/0
-						2
-						45:5/0
-
-						hmmm...
-
-						+89 to Attack Rating
-						+41% Enhanced Damage
-						Protector Shield
-						0,0,0
-						17:41/0
-						0,0,0
-						18:41/0
-						0,0,0
-						19:89/0
-
-
-						this works, because it's specifically superior?
-						+10% Enhanced Defense
-						Superior Antlers
-						2,0,0
-						16:10/0
-						*/
-						ItemData* ptrItemData = ptrItemUnit->ptItemData;
-						if (ptrItemData != nullptr)
-						{	//TODO: check if item is superior
-							/*
-							no worky:
-							+1 to Maximum Damage
-							Superior Balanced Knife
-							1,0,0
-							22:1/0
-							1,0,0
-							160:1/0
-							*/
-							int dwQuality = D2COMMON_ITEMS_GetQuality(ptrItemUnit);
-							D2C_ItemQuality itemQuality = static_cast<D2C_ItemQuality>(dwQuality);
-
-							if (itemQuality == D2C_ItemQuality::ITEMQUALITY_SUPERIOR)
-							{	//check in QualityItems.txt
-								SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE | FOREGROUND_INTENSITY);
-								std::cout << '[' << std::dec << ptrItemData->uniqueID << ']';
-							}
-							//void* wtfIsThis = D2COMMON_GetMagicAffixTable(); //works...
-							if (ptrItemData->autoPref != 0)
-							{	//additional stats (other than staff mods) max values can be computed here (examples: affixdump10.1434 and 1436 == + to mana, and! affixdump10.1442 for a Rondache!, affixdump10.1424 for Elite Matriarchal Javelin)
-								//this works, but let's move this code somewhere else where all other computations are done
-								D2AutoMagicTxt* ptrAutoMagicRecord = D2COMMON_TXT_GetMagicAffixRecord(ptrItemData->autoPref);
-								if (ptrAutoMagicRecord != nullptr)
-								{
-									SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_YELLOW | FOREGROUND_INTENSITY);
-									std::cout << '[' << std::dec << ptrItemData->autoPref - 1 << ']';
-									std::cout << ptrAutoMagicRecord->szName << ' ';
-								}
-							}
-							SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+							std::cout << '[' << std::dec << ptrItemData->autoPref - 1 << ']';
+							std::cout << ptrAutoMagicRecord->szName << ' ';
 						}
 					}
-					//else
-					{
-						std::cout << std::dec << record->first << ':' << d2Stat.value << '/' << record->second << std::endl;
-					}
-					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE | FOREGROUND_INTENSITY);
-				}
-				else
-				{
-					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_INTENSITY);
-					std::cout << "Missed " << std::dec << static_cast<WORD>(d2Stat.id) << std::endl;
-					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE | FOREGROUND_INTENSITY);
+					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);
 				}
 			}
+			//else
+			{
+				std::cout << std::dec << record->first << ':' << d2Stat.value << '/' << record->second << std::endl;
+			}
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE | FOREGROUND_INTENSITY);
 		}
-	}
-
-
-__declspec(dllexport) UniqueItemsBIN* __stdcall getItemUniqueAffix(Unit* const ptrItemUnit)
-	{
-		DWORD32 nUniqueIndex = D2COMMON_ITEMS_GetFileIndex(ptrItemUnit);
-		if (nUniqueIndex == 0)
-			return nullptr;
-		if (nUniqueIndex >= (*D2COMMON_sgptDataTables)->dwUniqItemsRecs)
-			return nullptr;
-		return ((*D2COMMON_sgptDataTables)->pUniqueItemsTxt) + nUniqueIndex;
 	}
 
 	__declspec(dllexport) Game* __stdcall getGame(void)

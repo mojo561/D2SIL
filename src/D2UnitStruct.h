@@ -278,13 +278,13 @@ ITEMFLAG_RUNEWORD               = 0x04000000
 	DWORD32	guid1;						//+1C Global Unique ID 1  
 	DWORD32	guid2;						//+20 Global Unique ID 2  
 	DWORD32	guid3;						//+24 Global Unique ID 3  
-	DWORD32	uniqueID;					//+28
+	DWORD32	uniqueID;					//+28 items that are superior will use this field as an index to QualityItems.txt
 	BYTE	ilvl;						//+2C
 	BYTE	uk1[0x03];					//+2D
 	WORD	version;					//+30 not sure what this is... looks like it's always set to 101?
 	WORD	rarePrefix;					//+32
 	WORD	rareSuffix;					//+34
-	WORD	autoPref;					//+36 this does not include staff mods
+	WORD	autoPref;					//+36 Automagix affix. this does not include staff mods. Refer to Armor.txt (auto prefix column). For staff mods, check ItemTypes.txt (staff mods column)
 	WORD	prefix[3];					//+38 pretty sure this is specific for magic affixes for magic / rare / unique items only
 	WORD	suffix[3];					//+3E pretty sure this is specific for magic affixes for magic / rare / unique items only
 	BYTE	equipLoc;					//+44

@@ -33,7 +33,7 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintItemUniqueAffix(Unit* c
 	UniqueItemsBIN* ptrUniqueItemRecord = CommonD2Funcs::getItemUniqueAffix(ptrItemUnit);
 	if (ptrUniqueItemRecord != nullptr)
 	{
-		std::wcout << D2LANG_GetTableString(ptrUniqueItemRecord->uniqueNameId) << L"!! ";
+		std::wcout << D2LANG_GetTableString(ptrUniqueItemRecord->wUniqueItemID) << L"!! ";
 	}
 }
 
@@ -358,11 +358,10 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeight(D2AutoMagic
 	if (ptrMagicAffixRecord == nullptr)
 		return;
 
-	DWORD32 dwMaxModCode = (*D2COMMON_sgptDataTables)->dwProportiesRecs;
-	DWORD32 modCode = CommonD2Funcs::findModContainingStat(ptrMagicAffixRecord, d2Stat);
-	if (modCode < dwMaxModCode)
+	DWORD32 dwModNCode = CommonD2Funcs::findModContainingStat(ptrMagicAffixRecord, d2Stat);
+	if (dwModNCode < _D2C_dwMaxMod)
 	{
-		DWORD32 dwModNMax = CommonD2Funcs::findModMax(ptrMagicAffixRecord, modCode);
+		DWORD32 dwModNMax = CommonD2Funcs::findModMax(ptrMagicAffixRecord, dwModNCode);
 		uint32_t nStatValue = d2Stat.value;
 		ItemStatCostBIN* ptrISC = ((*D2COMMON_sgptDataTables)->pItemStatCostTxt) + static_cast<WORD>(d2Stat.id);
 		BYTE bValShift = ptrISC->valshift;
@@ -392,7 +391,7 @@ __declspec(dllexport) void __stdcall ItemPrinter::doPrintAffixWeight(D2AutoMagic
 		}
 		else
 		{
-			std::cout << std::hex << modCode << ' ' << std::dec << static_cast<WORD>(d2Stat.id) << ' ' << d2Stat.value << ' ' << dwModNMax << std::endl;
+			std::cout << std::hex << dwModNCode << ' ' << std::dec << static_cast<WORD>(d2Stat.id) << ' ' << d2Stat.value << ' ' << dwModNMax << std::endl;
 		}
 	}
 	//TODO: new/testing
@@ -646,9 +645,23 @@ __declspec(dllexport) void __fastcall ItemPrinter::doPrintItemName(Unit* ptrItem
 	//This test should fix log spamming while shopping
 	if (D2COMMON_DRLG_GetRoomFromUnit(ptrItemUnit) == nullptr)
 	{
-		if(itemQuality != D2C_ItemQuality::ITEMQUALITY_RARE &&
-			itemQuality != D2C_ItemQuality::ITEMQUALITY_UNIQUE)
-		return;
+		if (itemQuality != D2C_ItemQuality::ITEMQUALITY_RARE &&
+			itemQuality != D2C_ItemQuality::ITEMQUALITY_UNIQUE &&
+			itemQuality != D2C_ItemQuality::ITEMQUALITY_SET &&
+			itemQuality != D2C_ItemQuality::ITEMQUALITY_SUPERIOR)
+		{
+			bool isElite = CommonD2Funcs::checkIfItemElite(D2COMMON_ITEMRECORDS_GetCodeFromUnit(ptrItemUnit));
+			bool isWhiteElite = (isElite && itemQuality != D2C_ItemQuality::ITEMQUALITY_MAGIC);
+			bool isSocketed = false;
+			if (isWhiteElite)
+			{
+				DWORD32 dwItemSockets = D2COMMON_UNITS_GetUnitStat(ptrItemUnit, static_cast<int>(D2C_Stat::STATS_ITEM_NUMSOCKETS), 0);
+				if (dwItemSockets > 0)
+					isSocketed = true;
+			}
+			if (!(isWhiteElite && isSocketed))
+				return;
+		}
 	}
 
 
@@ -706,27 +719,44 @@ __declspec(dllexport) void __fastcall ItemPrinter::doPrintItemName(Unit* ptrItem
 		case D2C_ItemQuality::ITEMQUALITY_CRACKED:
 			doPrintItemLowQualityString(ptrItemUnit);
 			break;
+		case D2C_ItemQuality::ITEMQUALITY_SUPERIOR:
+			if (ptrItemUnit->ptItemData != nullptr)
+			{
+				WORD wAutoMagicAffixCode = ptrItemUnit->ptItemData->autoPref;
+				//TODO: instead of hardcoding 747 and 1448, could we just look at the number of records for whatever file comes before autoaffix?
+				if (wAutoMagicAffixCode > 747 && wAutoMagicAffixCode < 1448)
+				{
+					D2AutoMagicTxt* ptrAutoMagicRecord = D2COMMON_TXT_GetMagicAffixRecord(wAutoMagicAffixCode);
+					if (ptrAutoMagicRecord != nullptr)
+					{
+						SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE | FOREGROUND_INTENSITY);
+						std::cout << '[' << std::dec << wAutoMagicAffixCode - 1 << ']';
+						std::cout << ptrAutoMagicRecord->szName << ' ';
+					}
+				}
+			}
+			break;
 		case D2C_ItemQuality::ITEMQUALITY_MAGIC:
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE | FOREGROUND_INTENSITY | BACKGROUND_BLUE);
 			doPrintItemMagicPrefix(ptrItemUnit);
 			//TODO: testing
 			//printAffixWeights(ptrItemUnit);
 			///////////////
 			break;
 		case D2C_ItemQuality::ITEMQUALITY_SET:
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY | BACKGROUND_WHITE);
 			doPrintItemSetAffix(ptrItemUnit);
 			break;
 		case D2C_ItemQuality::ITEMQUALITY_RARE:
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_INTENSITY);
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | BACKGROUND_YELLOW);
 			std::cout << '#' << std::dec << ++UniqueItemCounter;
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_YELLOW | FOREGROUND_INTENSITY);
 			std::cout << ' ';
 			doPrintItemRareAffix(ptrItemUnit);
 			//TODO: testing
 			//printAffixWeights(ptrItemUnit);
-			doPrintItemMagicPrefix(ptrItemUnit);
-			doPrintItemMagicSuffix(ptrItemUnit);
+			//doPrintItemMagicPrefix(ptrItemUnit);
+			//doPrintItemMagicSuffix(ptrItemUnit);
 			///////////////
 			break;
 		case D2C_ItemQuality::ITEMQUALITY_UNIQUE:
@@ -755,22 +785,16 @@ __declspec(dllexport) void __fastcall ItemPrinter::doPrintItemName(Unit* ptrItem
 
 	if (bPrintilvl)
 	{
+		if (itemQuality == D2C_ItemQuality::ITEMQUALITY_RARE)
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | BACKGROUND_YELLOW);
 		int dwItemlvl = D2COMMON_ITEMS_GetLevel(ptrItemUnit);
 		std::cout << "[i" << std::dec << dwItemlvl << ']';
 	}
 	else
 	{
-		int dwFileIndex = D2COMMON_ITEMRECORDS_GetItemIndexFromCode(dwItemCode); //D2COMMON_ITEMS_GetFileIndex(ptrItemUnit);
-		if (dwFileIndex != 0)
+		if (CommonD2Funcs::checkIfItemElite(dwItemCode))
 		{
-			D2ItemsTxt* d2it = D2COMMON_ITEMRECORDS_GetItemRecord(dwFileIndex);
-			if (d2it != nullptr)
-			{
-				if (dwItemCode == d2it->dwUltraCode)
-				{
-					std::cout << "Elite ";
-				}
-			}
+			std::cout << "Elite ";
 		}
 
 		int dwItemSockets = D2COMMON_UNITS_GetUnitStat(ptrItemUnit, static_cast<int>(D2C_Stat::STATS_ITEM_NUMSOCKETS), 0);
@@ -801,7 +825,7 @@ __declspec(dllexport) void __fastcall ItemPrinter::doPrintItemName(Unit* ptrItem
 			if (isEthereal)
 			{
 				const wchar_t wszEthereal[] = L" (Ethereal!)";
-				wchar_t *wszUniqueItemTitle = D2LANG_GetTableString(ptrUniqueItemRecord->uniqueNameId);
+				wchar_t *wszUniqueItemTitle = D2LANG_GetTableString(ptrUniqueItemRecord->wUniqueItemID);
 				size_t nUniqueItemTitleLen = wcsnlen_s(wszUniqueItemTitle, 0x800) + _countof(wszEthereal) + 1;
 				std::unique_ptr<wchar_t[]> wszMessage = std::make_unique<wchar_t[]>(nUniqueItemTitleLen);
 				wcsncpy_s(wszMessage.get(), nUniqueItemTitleLen, wszUniqueItemTitle, _TRUNCATE);
@@ -810,7 +834,7 @@ __declspec(dllexport) void __fastcall ItemPrinter::doPrintItemName(Unit* ptrItem
 			}
 			else
 			{
-				D2CLIENT_CHAT_PrintClientMessage(D2LANG_GetTableString(ptrUniqueItemRecord->uniqueNameId), static_cast<BYTE>(D2C_D2Color::DARK_YELLOW));
+				D2CLIENT_CHAT_PrintClientMessage(D2LANG_GetTableString(ptrUniqueItemRecord->wUniqueItemID), static_cast<BYTE>(D2C_D2Color::DARK_YELLOW));
 			}
 		}
 	}
@@ -828,6 +852,22 @@ __declspec(dllexport) void __fastcall ItemPrinter::doPrintItemName(Unit* ptrItem
 	{
 		doPrintItemMagicSuffix(ptrItemUnit);
 		std::cout << '(' << std::hex << static_cast<int>(dwItemType) << ')';
+	}
+
+	//TODO:new
+	if (ptrItemUnit->ptItemData != nullptr)
+	{
+		WORD wAutoMagicAffixCode = ptrItemUnit->ptItemData->autoPref;
+		//TODO: instead of hardcoding 747 and 1447, could we just look at the number of records for whatever file comes before autoaffix?
+		if (wAutoMagicAffixCode != 0 && (wAutoMagicAffixCode < 747 || wAutoMagicAffixCode > 1447))
+		{
+			D2AutoMagicTxt* ptrAutoMagicRecord = D2COMMON_TXT_GetMagicAffixRecord(wAutoMagicAffixCode);
+			if (ptrAutoMagicRecord != nullptr)
+			{
+				std::cout << ' ' << ptrAutoMagicRecord->szName;
+				std::cout << '[' << std::dec << wAutoMagicAffixCode - 1 << ']';
+			}
+		}
 	}
 
 	//TODO: testing

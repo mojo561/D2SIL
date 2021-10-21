@@ -516,22 +516,98 @@ struct D2CharStats
 
 */
 
-struct UniqueItemsBIN //size=0x14C (332)
-{
-	WORD	uniqueId;				//+00
-	char	szItemTitle[0x20];		//+02
-	WORD	uniqueNameId;			//+22
-	BYTE	uk2[0x08];				//+24
-	union {
-		BYTE	flag;		//+2C
-		struct {
-			BYTE ukf:2;
-			BYTE carry1:1;
-		};
-	};
-	BYTE	uk3[0x11F];		//+2D
-};
+//struct UniqueItemsBIN //size=0x14C (332)
+//{
+//	WORD	uniqueId;				//+00
+//	char	szItemTitle[0x20];		//+02
+//	WORD	uniqueNameId;			//+22
+//	BYTE	uk2[0x08];				//+24
+//	union {
+//		BYTE	flag;		//+2C
+//		struct {
+//			BYTE ukf:2;
+//			BYTE carry1:1;
+//		};
+//	};
+//	BYTE	uk3[0x11F];		//+2D
+//};
 
+struct UniqueItemsBIN //size=0x14C (332, verified in disasm). TODO: unknown 'ladder' and 'nolimit'
+{
+	WORD wFileIndex;			//0x0
+	char szItemTitle[0x20];		//0x2
+	WORD wUniqueItemID;			//0x22
+	DWORD32 dwVersion;			//0x24
+	union
+	{
+		DWORD32 dwItemCode;		//0x28
+		char szItemCode[4];		//0x28
+	};
+	DWORD32 dwEnabled;			//0x2C
+	DWORD32 dwRarity;			//0x30
+	WORD wItemLVL;				//0x34
+	WORD wItemLVLReq;			//0x36
+	BYTE bChrtransform;			//0x38
+	BYTE bInvtransform;			//0x39
+	char szFlippyfile[0x20];	//0x3A
+	char szInvFile[0x22];		//0x5A
+	DWORD32 dwCostMulti;		//0x7C
+	DWORD32 dwCostAdd;			//0x80
+	WORD wDropSound;			//0x84
+	WORD wDropSound2;			//0x86
+	BYTE bDropSfxFrame;			//0x88
+	BYTE bUnk_89;				//0x89
+	BYTE bUnk_8A;				//0x8A
+	BYTE bUnk_8B;				//0x8B
+	DWORD32 dwProp1ModCode;		//0x8C
+	DWORD32 dwPar1;				//0x90
+	DWORD32 dwMin1;				//0x94
+	DWORD32 dwMax1;				//0x98
+	DWORD32 dwProp2ModCode;		//0x9C
+	DWORD32 dwPar2;				//0xA0
+	DWORD32 dwMin2;				//0xA4
+	DWORD32 dwMax2;				//0xA8
+	DWORD32 dwProp3ModCode;		//0xAC
+	DWORD32 dwPar3;				//0xB0
+	DWORD32 dwMin3;				//0xB4
+	DWORD32 dwMax3;				//0xB8
+	DWORD32 dwProp4ModCode;		//0xBC
+	DWORD32 dwPar4;				//0xC0
+	DWORD32 dwMin4;				//0xC4
+	DWORD32 dwMax4;				//0xC8
+	DWORD32 dwProp5ModCode;		//0xCC
+	DWORD32 dwPar5;				//0xD0
+	DWORD32 dwMin5;				//0xD4
+	DWORD32 dwMax5;				//0xD8
+	DWORD32 dwProp6ModCode;		//0xDC
+	DWORD32 dwPar6;				//0xE0
+	DWORD32 dwMin6;				//0xE4
+	DWORD32 dwMax6;				//0xE8
+	DWORD32 dwProp7ModCode;		//0xEC
+	DWORD32 dwPar7;				//0xF0
+	DWORD32 dwMin7;				//0xF4
+	DWORD32 dwMax7;				//0xF8
+	DWORD32 dwProp8ModCode;		//0xFC
+	DWORD32 dwPar8;				//0x100
+	DWORD32 dwMin8;				//0x104
+	DWORD32 dwMax8;				//0x108
+	DWORD32 dwProp9ModCode;		//0x10C
+	DWORD32 dwPar9;				//0x110
+	DWORD32 dwMin9;				//0x114
+	DWORD32 dwMax9;				//0x118
+	DWORD32 dwProp10ModCode;	//0x11C
+	DWORD32 dwPar10;			//0x120
+	DWORD32 dwMin10;			//0x124
+	DWORD32 dwMax10;			//0x128
+	DWORD32 dwProp11ModCode;	//0x12C
+	DWORD32 dwPar11;			//0x130
+	DWORD32 dwMin11;			//0x134
+	DWORD32 dwMax11;			//0x138
+	DWORD32 dwProp12ModCode;	//0x13C
+	DWORD32 dwPar12;			//0x140
+	DWORD32 dwMin12;			//0x144
+	DWORD32 dwMax12;			//0x148
+};
 
 /*struct SetItemsBIN //size=0x1B8 (source : fct of dll)
 {
@@ -1460,7 +1536,7 @@ struct AffixTxtTable
 };
 */
 
-//NEW. sizeof=0x48
+//sizeof=0x48
 struct RareAffixTable
 {
 	BYTE unk_0[0xC];	//0x0
@@ -1480,5 +1556,33 @@ struct RareAffixTable
 	WORD wEtype4;		//0x24
 	char name[0x22];	//0x26
 };
+
+//sizeof=0x70
+struct QualityItemsTXT
+{
+	BYTE bArmor;			//0x0
+	BYTE bWeapon;			//0x1
+	BYTE bShield;			//0x2
+	BYTE bScepter;			//0x3
+	BYTE bWand;				//0x4
+	BYTE bStaff;			//0x5
+	BYTE bBow;				//0x6
+	BYTE bBoots;			//0x7
+	BYTE bGloves;			//0x8
+	BYTE bBelt;				//0x9
+	WORD wNumMods;			//0xA total number of dwModNCodes for the quality item record (either 1 or 2)
+	DWORD32 dwMod1Code;		//0xC
+	DWORD32 dwMod1Param;	//0x10
+	DWORD32 dwMod1Min;		//0x14
+	DWORD32 dwMod1Max;		//0x18
+	DWORD32 dwMod2Code;		//0x1C
+	DWORD32 dwMod2Param;	//0x20
+	DWORD32 dwMod2Min;		//0x24
+	DWORD32 dwMod2Max;		//0x28
+	char szEffect1[32];		//0x2C
+	char szEffect2[32];		//0x4C empty if wNumMods != 2
+	DWORD32 dwUnk_6C;		//0x6C
+};
+///////////
 
 #pragma pack(pop)

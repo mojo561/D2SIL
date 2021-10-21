@@ -29,6 +29,9 @@
 *                                                                           *
 *****************************************************************************/
 
+#define _D2C_dwMaxMod (*D2COMMON_sgptDataTables)->dwProportiesRecs
+#define _D2C_dwMaxStat (*D2COMMON_sgptDataTables)->dwItemStatCostRecs
+
 VAR(DWORD32, UniqueItemCounter)
 
 // end of file ---------------------------------------------------------------
