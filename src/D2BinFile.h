@@ -516,22 +516,6 @@ struct D2CharStats
 
 */
 
-//struct UniqueItemsBIN //size=0x14C (332)
-//{
-//	WORD	uniqueId;				//+00
-//	char	szItemTitle[0x20];		//+02
-//	WORD	uniqueNameId;			//+22
-//	BYTE	uk2[0x08];				//+24
-//	union {
-//		BYTE	flag;		//+2C
-//		struct {
-//			BYTE ukf:2;
-//			BYTE carry1:1;
-//		};
-//	};
-//	BYTE	uk3[0x11F];		//+2D
-//};
-
 struct UniqueItemsBIN //size=0x14C (332, verified in disasm). TODO: unknown 'ladder' and 'nolimit'
 {
 	WORD wFileIndex;			//0x0
@@ -609,16 +593,7 @@ struct UniqueItemsBIN //size=0x14C (332, verified in disasm). TODO: unknown 'lad
 	DWORD32 dwMax12;			//0x148
 };
 
-/*struct SetItemsBIN //size=0x1B8 (source : fct of dll)
-{
-	WORD	setId;			//+00
-	char	index[0x20];	//+02
-	BYTE	uk1;			//+04
-	WORD	setNameId;		//+24
-	BYTE	uk2[0x192];		//+26
-};*/
-//credit: https://d2mods.info/forum/viewtopic.php?f=8&t=61189
-struct SetItemsBIN
+struct SetItemsBIN //credit: https://d2mods.info/forum/viewtopic.php?f=8&t=61189
 {
 	WORD wSetItemId;					//0x00
 	char szName[32];					//0x02
@@ -717,7 +692,6 @@ struct SetItemsBIN
 	DWORD32 dwAMax5b;						//0x1B4
 };
 
-
 struct SkillDescBIN //size=0x120=288  (source : fct of dll)
 {
 	BYTE	uk1[0x08];		//+00
@@ -727,7 +701,6 @@ struct SkillDescBIN //size=0x120=288  (source : fct of dll)
 	WORD	strAltID;		//+0E
 	BYTE	uk2[0x110];		//+10
 };
-
 
 struct SkillsBIN //size=0x23C (572)
 {
@@ -858,14 +831,6 @@ struct PropertiesBIN // size=0x2E (46) (source total : fct of dll)
 	BYTE	func6;			//+1D
 	BYTE	func7;			//+1E
 	BYTE	uk2[0x1];		//+1F
-
-	//D2C_Stat	stat1;			//+20
-	//D2C_Stat	stat2;			//+22
-	//D2C_Stat	stat3;			//+24
-	//D2C_Stat	stat4;			//+26
-	//D2C_Stat	stat5;			//+28
-	//D2C_Stat	stat6;			//+2A
-	//D2C_Stat	stat7;			//+2C
 
 	WORD	stat1;			//+20
 	WORD	stat2;			//+22

@@ -102,7 +102,7 @@ D2FUNC(D2CLIENT, ITEMS_GetItemName, uint32_t, __stdcall, (Unit* ptrItemUnit, wch
 	Function:		d2client_827C0
 	Address:		D2CLIENT + 0x827C0
 	Notes:
-	unknown function, use this in a very specific patch.
+	TODO: unused - erase?
 */
 D2FUNC(D2CLIENT, unk_827C0, void, __stdcall, (void), 0x827C0);
 
@@ -160,7 +160,8 @@ int __stdcall ITEMCALC_Eval(D2UnitStrc* pUnit, D2UnitStrc* pItem, DWORD dwCalc)
 	Function:		ITEMRECORDS_GetItemQualityRecord
 	Address:		D2Common.#11007
 	Notes:
-	TODO: new / untested
+	returns a QualityItems.txt record ptr based on a given file index, or nullptr if the index is invalid.
+	The file index is retrieved from a superior item's itemdata unique ID (ptrItemData->uniqueID).
 */
 D2FUNC(D2COMMON, ITEMRECORDS_GetItemQualityRecord, QualityItemsTXT*, __stdcall, (DWORD32 dwItemQualityIndex), -11007);
 
@@ -168,7 +169,8 @@ D2FUNC(D2COMMON, ITEMRECORDS_GetItemQualityRecord, QualityItemsTXT*, __stdcall, 
 	Function:		D2COMMON_GetMagicAffixTable
 	Address:		D2Common.#10492
 	Notes:
-	returns ptr to DWORD magic affix table length. Add to this ptr to get prefix (+0xC) suffix (+8), or automagic(+0x10) tables
+	returns ptr to DWORD magic affix table length. Add to this ptr to get prefix (+0xC) suffix (+8), or automagic(+0x10) tables.
+	TODO: check AffixTxtTable in D2BinFile.h
 */
 D2FUNC(D2COMMON, GetMagicAffixTable, void*, __stdcall, (void), -10492);
 

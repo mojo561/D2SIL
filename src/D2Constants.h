@@ -413,33 +413,7 @@ enum class D2C_Stat : WORD
 
 /*
 
-Credit: Pluggy v10.01
-
-TODO: pretty sure we're missing the following items (add to end, ref: properties.txt):
-extra-fire
-extra-ltng
-extra-cold
-extra-pois
-dmg-elem
-dmg-elem-min
-dmg-elem-max
-all-stats
-addxp
-heal-kill
-cheap
-rip
-att-mon%
-dmg-mon%
-kill-skill
-death-skill
-levelup-skill
-skill-rand
-fade
-levelreq
-ethereal
-oskill
-state
-randclassskill
+Credit: Pluggy v10.01, + extra mods
 
 */
 enum class D2C_Mod : WORD
@@ -770,7 +744,10 @@ enum class D2C_ItemCodes
 	ITEMCODE_ANTIDOTE = 0x20737079,
 	ITEMCODE_THAWPOT = 0x20736d77,
 	ITEMCODE_ARROWS = 0x20767161,
-	ITEMCODE_BOLTS = 0x20767163
+	ITEMCODE_BOLTS = 0x20767163,
+	ITEMCODE_KEYOFTERROR = 0x20316B70,
+	ITEMCODE_KEYOFHATE = 0x20326B70,
+	ITEMCODE_KEYOFDESTRUCTION = 0x20336B70
 };
 
 /*
@@ -784,13 +761,13 @@ enum class D2C_ItemTypes
 	ITEMTYPE_RING = 0xA,
 	ITEMTYPE_AMULET = 0xC,
 	ITEMTYPE_SCROLL = 0x16,
-	ITEMTYPE_WAND = 0x19, //new, untested...
-	ITEMTYPE_STAFF = 0x1A, //new, untested...
+	ITEMTYPE_WAND = 0x19,
+	ITEMTYPE_STAFF = 0x1A,
 	ITEMTYPE_MISSPOT = 0x26,
-	ITEMTYPE_KEY = 0x29,
+	ITEMTYPE_KEY = 0x29, //special keys (key of destruction, hate, terror) do not share this item type
 	ITEMTYPE_JEWEL = 0x3A,
-	ITEMTYPE_ORB = 0x44, //new, untested...
-	ITEMTYPE_VOODOO_HEAD = 0x45, //new, untested
+	ITEMTYPE_ORB = 0x44,
+	ITEMTYPE_VOODOO_HEAD = 0x45,
 	ITEMTYPE_RUNE = 0x4A,
 	ITEMTYPE_HEALPOT = 0x4C,
 	ITEMTYPE_MANAPOT = 0x4D,
@@ -806,7 +783,6 @@ Credit: Pluggy v10.01
 
 TODO: test the following (credit: Necrolis https://d2mods.info/forum/viewtopic.php?f=8&t=45730&p=500005&hilit=experience#p334070)
 Colour Chart for D2gfx.#10057
-(got tired of going through rubbish further down..., I'll add them later)
 01=Black*
 02=Black*
 03=Black*
