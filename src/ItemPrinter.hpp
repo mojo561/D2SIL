@@ -292,7 +292,8 @@ __declspec(dllexport) void __fastcall ItemPrinter::doPrintItemName(Unit* ptrItem
 	static const size_t nBufferLen = 0x100;
 	wchar_t szBuffer[nBufferLen] = { '\0' };
 	D2CLIENT_ITEMS_GetItemName(ptrItemUnit, szBuffer, nBufferLen);
-	std::wcout << szBuffer;
+	//std::wcout << szBuffer;
+	std::wcout << szBuffer << '[' << std::hex << std::uppercase << dwItemCode << ']';
 
 	if (itemType == D2C_ItemTypes::ITEMTYPE_RUNE)
 	{
