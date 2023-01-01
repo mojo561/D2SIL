@@ -48,7 +48,7 @@ enum D2C_UnitTypes
 Credit: Pluggy v10.01
 
 */
-enum class D2C_Stat
+enum class D2C_Stat : WORD
 {
     STATS_STRENGTH = 0,
     STATS_ENERGY,
@@ -413,33 +413,7 @@ enum class D2C_Stat
 
 /*
 
-Credit: Pluggy v10.01
-
-TODO: pretty sure we're missing the following items (add to end, ref: properties.txt):
-extra-fire
-extra-ltng
-extra-cold
-extra-pois
-dmg-elem
-dmg-elem-min
-dmg-elem-max
-all-stats
-addxp
-heal-kill
-cheap
-rip
-att-mon%
-dmg-mon%
-kill-skill
-death-skill
-levelup-skill
-skill-rand
-fade
-levelreq
-ethereal
-oskill
-state
-randclassskill
+Credit: Pluggy v10.01, + extra mods
 
 */
 enum class D2C_Mod : WORD
@@ -470,7 +444,7 @@ enum class D2C_Mod : WORD
 	LIGHTMAXDAM,
 	POISONMINDAM,
 	POISONMAXDAM,
-	POISONLENGTH,
+	POISONLENGTH, //non-printable
 	MINDAMAGE, //properties.txt stat1: 65535 stats: {21, 23, 159}
 	MAXDAMAGE, //properties.txt stat1: 65535 stats: {22, 24, 160}
 	WEAPONDAMAGE_PERCENT, //properties.txt stat1: 65535 stats: {17, 18}
@@ -490,7 +464,7 @@ enum class D2C_Mod : WORD
 	ASBORBFIRE_PERCENT,
 	ASBORBFIRE,
 	ASBORBLIGHT_PERCENT,
-	ASBORBLIGHT,
+	ASBORBLIGHT, //is this addclassskills for sorc?
 	ASBORBMAGIC_PERCENT,
 	ASBORBMAGIC,
 	ASBORBCOLD_PERCENT,
@@ -500,7 +474,7 @@ enum class D2C_Mod : WORD
 	HITPOINTS_DELTA,
 	ATTACKERTAKES_DAMAGE,
 	FASTATTACKRATE,
-	FASTERATTACKRATE,
+	FASTERATTACKRATE, //non-printable (is this cold-length?)
 	FASTESTATTACKRATE,
 	GOLDBONUS,
 	MAGICBONUS,
@@ -687,33 +661,32 @@ enum class D2C_Mod : WORD
 	STATS_ITEM_AC_VS_MONSTER_MOD, //properties.txt stat1: 65535
 	STATS_ITEM_AC_PERCENT_VS_MONSTER_MOD, //properties.txt stat1: 65535
 	INDESTRUCTIBLE, //properties.txt stat1: 65535 stats: { 152 }
-	STATS_ITEM_CHARGED_SKILL_MOD
-	/*
-	extra-fire
-	extra-ltng
-	extra-cold
-	extra-pois
-	dmg-elem
-	dmg-elem-min
-	dmg-elem-max
-	all-stats
-	addxp
-	heal-kill
-	cheap
-	rip
-	att-mon%
-	dmg-mon%
-	kill-skill
-	death-skill
-	levelup-skill
-	skill-rand
-	fade
-	levelreq
-	ethereal //properties.txt stat1: 65535
-	oskill
-	state
-	randclassskill
-	*/
+	STATS_ITEM_CHARGED_SKILL_MOD,
+	//new
+	STATS_ITEM_extra_fire,
+	STATS_ITEM_extra_ltng,
+	STATS_ITEM_extra_cold,
+	STATS_ITEM_extra_pois,
+	STATS_ITEM_dmg_elem,
+	STATS_ITEM_dmg_elem_min,
+	STATS_ITEM_dmg_elem_max,
+	STATS_ITEM_all_stats,
+	STATS_ITEM_addxp,
+	STATS_ITEM_heal_kill,
+	STATS_ITEM_cheap,
+	STATS_ITEM_rip,
+	STATS_ITEM_att_monpct,
+	STATS_ITEM_dmg_monpct,
+	STATS_ITEM_kill_skill,
+	STATS_ITEM_death_skill,
+	STATS_ITEM_levelup_skill,
+	STATS_ITEM_skill_rand,
+	STATS_ITEM_fade,
+	STATS_ITEM_levelreq,
+	STATS_ITEM_ethereal, //properties.txt stat1: 65535
+	STATS_ITEM_oskill,
+	STATS_ITEM_state,
+	STATS_ITEM_randclassskill
 };
 
 /*
@@ -750,7 +723,7 @@ enum class D2C_ItemFlags
     ITEMFLAG_NON_SELLABLE     = 0x00001000,		//TODO:test
     ITEMFLAG_NEWITEM2         = 0x00002000,
     ITEMFLAG_CHECKSECPRICE    = 0x00010000,
-    ITEMFLAG_CHACKGAMBLEPRICE = 0x00020000,
+    ITEMFLAG_CHECKGAMBLEPRICE = 0x00020000,
     ITEMFLAG_ETHERAL          = 0x00400000,
     ITEMFLAG_FROMPLAYER       = 0x01000000,
 	ITEMFLAG_RUNEWORD         = 0x04000000		//TODO:test
@@ -760,6 +733,12 @@ enum class D2C_ItemFlags
 
 Item Codes
 see: ItemTypes.txt, these are from the Code column
+TODO:
+Diablo's Horn[206E6864]
+Mephisto's Brain[2072626D]
+Baal's Eye[20796562]
+
+Standard of Heroes[20647473]
 
 */
 enum class D2C_ItemCodes
@@ -771,7 +750,10 @@ enum class D2C_ItemCodes
 	ITEMCODE_ANTIDOTE = 0x20737079,
 	ITEMCODE_THAWPOT = 0x20736d77,
 	ITEMCODE_ARROWS = 0x20767161,
-	ITEMCODE_BOLTS = 0x20767163
+	ITEMCODE_BOLTS = 0x20767163,
+	ITEMCODE_KEYOFTERROR = 0x20316B70,
+	ITEMCODE_KEYOFHATE = 0x20326B70,
+	ITEMCODE_KEYOFDESTRUCTION = 0x20336B70
 };
 
 /*
@@ -785,13 +767,13 @@ enum class D2C_ItemTypes
 	ITEMTYPE_RING = 0xA,
 	ITEMTYPE_AMULET = 0xC,
 	ITEMTYPE_SCROLL = 0x16,
-	ITEMTYPE_WAND = 0x19, //new, untested...
-	ITEMTYPE_STAFF = 0x1A, //new, untested...
+	ITEMTYPE_WAND = 0x19,
+	ITEMTYPE_STAFF = 0x1A,
 	ITEMTYPE_MISSPOT = 0x26,
-	ITEMTYPE_KEY = 0x29,
+	ITEMTYPE_KEY = 0x29, //special keys (key of destruction, hate, terror) do not share this item type
 	ITEMTYPE_JEWEL = 0x3A,
-	ITEMTYPE_ORB = 0x44, //new, untested...
-	ITEMTYPE_VOODOO_HEAD = 0x45, //new, untested
+	ITEMTYPE_ORB = 0x44,
+	ITEMTYPE_VOODOO_HEAD = 0x45,
 	ITEMTYPE_RUNE = 0x4A,
 	ITEMTYPE_HEALPOT = 0x4C,
 	ITEMTYPE_MANAPOT = 0x4D,
@@ -807,7 +789,6 @@ Credit: Pluggy v10.01
 
 TODO: test the following (credit: Necrolis https://d2mods.info/forum/viewtopic.php?f=8&t=45730&p=500005&hilit=experience#p334070)
 Colour Chart for D2gfx.#10057
-(got tired of going through rubbish further down..., I'll add them later)
 01=Black*
 02=Black*
 03=Black*

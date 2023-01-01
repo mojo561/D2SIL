@@ -96,13 +96,13 @@ D2VAR(D2CLIENT, ptrPlayerUnit, Unit*, 0x11B800);
 	Notes:
 	returns 0 on failure. Item name is stored in szBuffer as a unicode string.
 */
-D2FUNC(D2CLIENT, ITEMS_GetItemName, uint32_t, __stdcall, (Unit* ptrItemUnit, wchar_t* szBuffer, DWORD dwBufferLen), 0x914F0);//D2FUNC(D2CLIENT, ITEMS_GetItemName, uint32_t, __stdcall, (uintptr_t* ptrItemUnit, wchar_t* szBuffer, DWORD dwBufferLen), 0x914F0);
+D2FUNC(D2CLIENT, ITEMS_GetItemName, uint32_t, __stdcall, (Unit* ptrItemUnit, wchar_t* szBuffer, DWORD dwBufferLen), 0x914F0);
 
 /*
 	Function:		d2client_827C0
 	Address:		D2CLIENT + 0x827C0
 	Notes:
-	unknown function, use this in a very specific patch.
+	TODO: unused - erase?
 */
 D2FUNC(D2CLIENT, unk_827C0, void, __stdcall, (void), 0x827C0);
 
@@ -134,6 +134,61 @@ D2VAR(D2COMMON, sgptDataTables, sgptDataTable*, 0x99E1C);
 
 D2VAR(D2COMMON, ptrMagicAffixTable, D2AutoMagicTxt*, 0x9FBC0);
 D2VAR(D2COMMON, ptrMagicAffixTableLength, DWORD32*, 0x9FBB8);
+
+//////////////////////////////////////////
+//TODO:
+
+/*
+	Function:		STATS_GetExpForNextLevel
+	Address:		D2Common.#10399
+	Notes:
+
+DWORD __stdcall STATS_GetExpForNextLevel(int nClass, int nLevel)
+*/
+
+/*
+	Function:		ITEMCALC_Eval
+	Address:		D2Common.#10428
+	Notes:
+
+int __stdcall ITEMCALC_Eval(D2UnitStrc* pUnit, D2UnitStrc* pItem, DWORD dwCalc)
+*/
+
+//////////////////////////////////////////
+
+/*
+	Function:		ITEMRECORDS_GetItemQualityRecord
+	Address:		D2Common.#11007
+	Notes:
+	returns a QualityItems.txt record ptr based on a given file index, or nullptr if the index is invalid.
+	The file index is retrieved from a superior item's itemdata unique ID (ptrItemData->uniqueID).
+*/
+D2FUNC(D2COMMON, ITEMRECORDS_GetItemQualityRecord, QualityItemsTXT*, __stdcall, (DWORD32 dwItemQualityIndex), -11007);
+
+/*
+	Function:		D2COMMON_GetMagicAffixTable
+	Address:		D2Common.#10492
+	Notes:
+	returns ptr to DWORD magic affix table length. Add to this ptr to get prefix (+0xC) suffix (+8), or automagic(+0x10) tables.
+	TODO: check AffixTxtTable in D2BinFile.h
+*/
+D2FUNC(D2COMMON, GetMagicAffixTable, void*, __stdcall, (void), -10492);
+
+/*
+	Function:		DRLG_GetRoomFromUnit
+	Address:		D2Common.#10331
+	Notes:
+	this function always(?) returns null if the item is in a town.
+*/
+D2FUNC(D2COMMON, DRLG_GetRoomFromUnit, Room*, __stdcall, (Unit* ptrUnit), -10331);
+
+/*
+	Function:		UNITS_GetOffsetX
+	Address:		D2Common.#10651
+	Notes: Items not on the ground (equipped or in inventory) will have an X offset of 0
+	TODO: D2Common.#11142 for offsetY?
+*/
+D2FUNC(D2COMMON, UNITS_GetOffsetX, int, __stdcall, (Unit* ptrUnit), -10651);
 
 /*
 	Function:		TXT_GetSetItemRecord
@@ -167,28 +222,28 @@ D2FUNC(D2COMMON, ITEMS_GetRareSuffix, WORD, __stdcall, (Unit* ptrItemUnit), -104
 D2FUNC(D2COMMON, ITEMS_GetRarePrefix, WORD, __stdcall, (Unit* ptrItemUnit), -10380);
 
 /*
-	Function:		ITEMS_GetMagicPrefix
+	Function:		ITEMRECORDS_GetItemMagicPrefix
 	Address:		D2Common.#10257
 	Notes:
-	Returns a row index in MagicPrefix.txt
+	Returns a row index in MagicPrefix.txt (see: affixdump10.csv), or 0 if the prefix is invalid
 */
-D2FUNC(D2COMMON, ITEMS_GetMagicPrefix, WORD, __stdcall, (Unit* ptrItemUnit, DWORD dwIndex), -10257);//D2FUNC(D2COMMON, ITEMS_GetMagicPrefix, WORD, __stdcall, (uintptr_t* ptrItemUnit, DWORD dwIndex), -10257);
+D2FUNC(D2COMMON, ITEMRECORDS_GetItemMagicPrefix, WORD, __stdcall, (Unit* ptrItemUnit, DWORD dwIndex), -10257);
 
 /*
 	Function:		TXT_GetMagicAffixRecord
 	Address:		D2Common.#10248
 	Notes:
-	nRecord obtained from either D2Common.#10257 (ITEMS_GetMagicPrefix) or D2Common.#11028 (ITEMRECORDS_GetItemSuffix)
+	nRecord obtained from either D2Common.#10257 (ITEMRECORDS_GetItemMagicPrefix) or D2Common.#11028 (ITEMRECORDS_GetItemMagicSuffix)
 */
 D2FUNC(D2COMMON, TXT_GetMagicAffixRecord, D2AutoMagicTxt* , __stdcall, (int nRecord), -10248);
 
 /*
-	Function:		ITEMRECORDS_GetItemSuffix
+	Function:		ITEMRECORDS_GetItemMagicSuffix
 	Address:		D2Common.#11028
 	Notes:
-	Returns a row index in MagicSuffix.txt
+	Returns a row index in MagicSuffix.txt (see also: affixdump10.csv), or 0 if the prefix is invalid
 */
-D2FUNC(D2COMMON, ITEMRECORDS_GetItemSuffix, WORD, __stdcall, (Unit* ptrItemUnit, DWORD dwIndex), -11028);//D2FUNC(D2COMMON, ITEMRECORDS_GetItemSuffix, WORD, __stdcall, (uintptr_t* ptrItemUnit, DWORD dwIndex), -11028);
+D2FUNC(D2COMMON, ITEMRECORDS_GetItemMagicSuffix, WORD, __stdcall, (Unit* ptrItemUnit, DWORD dwIndex), -11028);
 
 /*
 	Function:		ITEMRECORDS_GetQualityStringFromIndex
@@ -213,7 +268,7 @@ D2FUNC(D2COMMON, ITEMRECORDS_GetQualityStringFromIndex, char*, __stdcall, (DWORD
 	Notes:
 	returns ptrItemUnit->ptrItemData->dwItemFlags & unk_400000 (sample val: 0x905A4D)
 */
-D2FUNC(D2COMMON, ITEMFLAGS_CheckEthereal, BOOL, __stdcall, (Unit* ptrItemUnit), -10225);//D2FUNC(D2COMMON, ITEMFLAGS_CheckEthereal, BOOL, __stdcall, (uintptr_t* ptrItemUnit), -10225);
+D2FUNC(D2COMMON, ITEMFLAGS_CheckEthereal, BOOL, __stdcall, (Unit* ptrItemUnit), -10225);
 
 /*
 	Function:		UNITS_GetUnitStat
@@ -221,7 +276,7 @@ D2FUNC(D2COMMON, ITEMFLAGS_CheckEthereal, BOOL, __stdcall, (Unit* ptrItemUnit), 
 	Notes:
 	pretty sure it's safe to pass 0 for arg Stat2. 0xC2 = itemsocket stat? Check ItemStatCost.txt
 */
-D2FUNC(D2COMMON, UNITS_GetUnitStat, DWORD, __stdcall, (Unit* ptrUnit, DWORD stat, DWORD stat2), -10973);//D2FUNC(D2COMMON, UNITS_GetUnitStat, DWORD, __stdcall, (uintptr_t* ptrUnit, DWORD stat, DWORD stat2), -10973);
+D2FUNC(D2COMMON, UNITS_GetUnitStat, DWORD, __stdcall, (Unit* ptrUnit, DWORD stat, DWORD stat2), -10973);
 
 /*
 	Function:		ITEMS_GetLevel
@@ -229,7 +284,7 @@ D2FUNC(D2COMMON, UNITS_GetUnitStat, DWORD, __stdcall, (Unit* ptrUnit, DWORD stat
 	Notes:
 	...
 */
-D2FUNC(D2COMMON, ITEMS_GetLevel, int, __stdcall, (Unit* ptrItemUnit), -10086);//D2FUNC(D2COMMON, ITEMS_GetLevel, int, __stdcall, (uintptr_t* ptrItemUnit), -10086);
+D2FUNC(D2COMMON, ITEMS_GetLevel, int, __stdcall, (Unit* ptrItemUnit), -10086);
 
 /*
 	Function:		ITEMS_IsMagical
@@ -254,7 +309,7 @@ D2FUNC(D2COMMON, ITEMRECORDS_GetItemRecord, D2ItemsTxt*, __stdcall, (int dwItemF
 	Notes:
 	does not determine if an item is actually magic or not...
 */
-D2FUNC(D2COMMON, ITEMRECORDS_GetMagic, BYTE, __stdcall, (Unit* ptrItemUnit), -10710);//D2FUNC(D2COMMON, ITEMRECORDS_GetMagic, BYTE, __stdcall, (uintptr_t* ptrItemUnit), -10710);
+D2FUNC(D2COMMON, ITEMRECORDS_GetMagic, BYTE, __stdcall, (Unit* ptrItemUnit), -10710);
 
 /*
 	Function:		ITEMRECORDS_GetRare
@@ -262,7 +317,7 @@ D2FUNC(D2COMMON, ITEMRECORDS_GetMagic, BYTE, __stdcall, (Unit* ptrItemUnit), -10
 	Notes:
 	does not determine if an item is actually rare or not...
 */
-D2FUNC(D2COMMON, ITEMRECORDS_GetRare, BYTE, __stdcall, (Unit* ptrItemUnit), -11036);//D2FUNC(D2COMMON, ITEMRECORDS_GetRare, BYTE, __stdcall, (uintptr_t* ptrItemUnit), -11036);
+D2FUNC(D2COMMON, ITEMRECORDS_GetRare, BYTE, __stdcall, (Unit* ptrItemUnit), -11036);
 
 /*
 	Function:		ITEMRECORDS_GetUnique
@@ -270,7 +325,7 @@ D2FUNC(D2COMMON, ITEMRECORDS_GetRare, BYTE, __stdcall, (Unit* ptrItemUnit), -110
 	Notes:
 	does not determine if an item is actually unique or not...
 */
-D2FUNC(D2COMMON, ITEMRECORDS_GetUnique, BYTE, __stdcall, (Unit* ptrItemUnit), -10119);//D2FUNC(D2COMMON, ITEMRECORDS_GetUnique, BYTE, __stdcall, (uintptr_t* ptrItemUnit), -10119);
+D2FUNC(D2COMMON, ITEMRECORDS_GetUnique, BYTE, __stdcall, (Unit* ptrItemUnit), -10119);
 
 /*
 	Function:		ITEMS_GetQuality
@@ -283,7 +338,7 @@ D2FUNC(D2COMMON, ITEMRECORDS_GetUnique, BYTE, __stdcall, (Unit* ptrItemUnit), -1
 	D2Client.dll:6FB1DB8C cmp     eax, 5
 	An item's quality is only valid if it is between 0 and 0xA
 */
-D2FUNC(D2COMMON, ITEMS_GetQuality, int, __stdcall, (Unit* ptrItemUnit), -10106);//D2FUNC(D2COMMON, ITEMS_GetQuality, int, __stdcall, (uintptr_t* ptrItemUnit), -10106);
+D2FUNC(D2COMMON, ITEMS_GetQuality, int, __stdcall, (Unit* ptrItemUnit), -10106);
 
 /*
 	Function:		ITEMRECORDS_GetItemIndexFromCode
@@ -299,7 +354,7 @@ D2FUNC(D2COMMON, ITEMRECORDS_GetItemIndexFromCode, int, __stdcall, (DWORD dwItem
 	Notes:
 	returns file row index in ItemTypes.txt.
 */
-D2FUNC(D2COMMON, ITEMRECORDS_GetItemTypeFromItem, int, __stdcall, (Unit* ptrItemUnit), -11088);//D2FUNC(D2COMMON, ITEMRECORDS_GetItemTypeFromItem, int, __stdcall, (uintptr_t* ptrItemUnit), -11088);
+D2FUNC(D2COMMON, ITEMRECORDS_GetItemTypeFromItem, int, __stdcall, (Unit* ptrItemUnit), -11088);
 
 /*
 	Function:		ITEMRECORDS_GetCodeFromUnit
@@ -307,7 +362,7 @@ D2FUNC(D2COMMON, ITEMRECORDS_GetItemTypeFromItem, int, __stdcall, (Unit* ptrItem
 	Notes:
 	returns item code.
 */
-D2FUNC(D2COMMON, ITEMRECORDS_GetCodeFromUnit, DWORD, __stdcall, (Unit* ptrItemUnit), -10802);//D2FUNC(D2COMMON, ITEMRECORDS_GetCodeFromUnit, DWORD, __stdcall, (uintptr_t* ptrItemUnit), -10802);
+D2FUNC(D2COMMON, ITEMRECORDS_GetCodeFromUnit, DWORD, __stdcall, (Unit* ptrItemUnit), -10802);
 
 /*
 	Function:		ITEMTYPERECORDS_GetNormal
@@ -315,17 +370,17 @@ D2FUNC(D2COMMON, ITEMRECORDS_GetCodeFromUnit, DWORD, __stdcall, (Unit* ptrItemUn
 	Notes:
 	returns true or false.
 */
-D2FUNC(D2COMMON, ITEMTYPERECORDS_GetNormal, BYTE, __stdcall, (Unit* ptrItemUnit), -10556);//D2FUNC(D2COMMON, ITEMTYPERECORDS_GetNormal, BYTE, __stdcall, (uintptr_t* ptrItemUnit), -10556);
+D2FUNC(D2COMMON, ITEMTYPERECORDS_GetNormal, BYTE, __stdcall, (Unit* ptrItemUnit), -10556);
 
 /*
 	Function:		ITEMS_GetFileIndex TODO: rename - I think this is for unique items only
 	Address:		D2Common.#10620
 	Notes:
 	returns (int)pItem[0x28] (ptrUnit->dwInitSeed).
-	This value is used for functions such as d2common_10961 (with fileIndex stored in eax, d2common_10961 returns char ptr to Dword(off_6FDEFD9C)+(0x22*EAX), or null if EAX >= value stored in dword_6FDEFD98 (usually 4))
+	This value is used for functions such as d2common_10961 (with fileIndex stored in eax, d2common_10961 returns char ptr to Dword(D2Common+9FD9C)+(0x22*EAX), or null if EAX >= value stored in dword_6FDEFD98 (usually 4))
 	Return values are used differently depending on the item (does not denote item quality), a negative result indicates failure
 */
-D2FUNC(D2COMMON, ITEMS_GetFileIndex, int, __stdcall, (Unit* ptrItemUnit), -10620);//D2FUNC(D2COMMON, ITEMS_GetFileIndex, int, __stdcall, (uintptr_t* ptrItemUnit), -10620);
+D2FUNC(D2COMMON, ITEMS_GetFileIndex, int, __stdcall, (Unit* ptrItemUnit), -10620);
 
 /*
 	Function:		CHAT_AllocHoverText
@@ -362,6 +417,6 @@ D2FUNC(D2COMMON, CHAT_SetHoverLocale, void, __stdcall, (uintptr_t* pHoverText, D
 	MOV EAX, [ESI + 0xC4]
 	OR EAX, 0x100
 */
-D2FUNC(D2COMMON, UNITS_Update, void, __stdcall, (Unit* ptrUnit), -10158);//D2FUNC(D2COMMON, UNITS_Update, void, __stdcall, (uintptr_t* ptrUnit), -10158);
+D2FUNC(D2COMMON, UNITS_Update, void, __stdcall, (Unit* ptrUnit), -10158);
 
 // end of file -----------------------------------------------------------------
