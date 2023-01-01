@@ -733,6 +733,12 @@ enum class D2C_ItemFlags
 
 Item Codes
 see: ItemTypes.txt, these are from the Code column
+TODO:
+Diablo's Horn[206E6864]
+Mephisto's Brain[2072626D]
+Baal's Eye[20796562]
+
+Standard of Heroes[20647473]
 
 */
 enum class D2C_ItemCodes

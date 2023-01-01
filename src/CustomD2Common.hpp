@@ -229,7 +229,7 @@ namespace CommonD2Funcs
 
 		/* Key: stores a valid or invalid stat ID.
 		Value: stores the sum of all max stat values found for each duplicate mod/stat code, or 0 */
-		std::unordered_map<WORD, DWORD32> mapPropertyStatMaxTable;
+		std::unordered_map<WORD, std::pair<DWORD32,DWORD32>> mapPropertyStatMaxTable;
 
 		for (int i = 0; i < wItemStatTableSize; ++i)
 		{
@@ -238,7 +238,7 @@ namespace CommonD2Funcs
 			{
 				auto record = mapPropertyStatMaxTable.find(wStatID);
 				if (record == mapPropertyStatMaxTable.end())
-					mapPropertyStatMaxTable.insert(std::make_pair(wStatID, 0));
+					mapPropertyStatMaxTable.insert(std::make_pair(wStatID, std::make_pair(0,0)));
 				//else // typical values that duplicate: stat 107
 				//	std::cout << "Dupe! " << std::dec << wStatID << std::endl;
 			}
@@ -248,7 +248,7 @@ namespace CommonD2Funcs
 		//property table for a specific mod. May contain invalid stat ids
 		std::array<WORD, dwPropertyStatTableLength> arrPropertyStatTable;
 
-		auto doMergeStatTable = [&arrPropertyStatTable, &mapPropertyStatMaxTable](DWORD32 dwModCode, DWORD32 dwModNMax) {
+		auto doMergeStatTable = [&arrPropertyStatTable, &mapPropertyStatMaxTable](DWORD32 dwModCode, DWORD32 dwModNMin, DWORD32 dwModNMax) {
 			if (dwModCode >= _D2C_dwMaxMod)
 				return;
 
@@ -362,7 +362,8 @@ namespace CommonD2Funcs
 				auto record = mapPropertyStatMaxTable.find(arrPropertyStatTable[j]);
 				if (record != mapPropertyStatMaxTable.end())
 				{
-					record->second += dwModNMax;
+					record->second.first += dwModNMin;
+					record->second.second += dwModNMax;
 				}
 				else if (arrPropertyStatTable[j] >= _D2C_dwMaxStat)
 				{
@@ -374,8 +375,8 @@ namespace CommonD2Funcs
 				}
 				else
 				{
-					std::cout << "Missed " << std::dec << arrPropertyStatTable[j] << ", adding with modNMax " << dwModNMax << std::endl;
-					mapPropertyStatMaxTable.insert(std::make_pair(arrPropertyStatTable[j], dwModNMax));
+					std::cout << "Missed " << std::dec << arrPropertyStatTable[j] << ", adding with modNMin = " << dwModNMin << ", modNMax =" << dwModNMax << std::endl;
+					mapPropertyStatMaxTable.insert(std::make_pair(arrPropertyStatTable[j], std::make_pair(dwModNMin, dwModNMax)));
 				}
 			}
 		};
@@ -391,9 +392,9 @@ namespace CommonD2Funcs
 				if (ptrMagicAffixRecord == nullptr || ptrMagicAffixRecord->dwMod1Code >= _D2C_dwMaxMod)
 					break;
 
-				doMergeStatTable(ptrMagicAffixRecord->dwMod1Code, ptrMagicAffixRecord->dwMod1Max);
-				doMergeStatTable(ptrMagicAffixRecord->dwMod2Code, ptrMagicAffixRecord->dwMod2Max);
-				doMergeStatTable(ptrMagicAffixRecord->dwMod3Code, ptrMagicAffixRecord->dwMod3Max);
+				doMergeStatTable(ptrMagicAffixRecord->dwMod1Code, ptrMagicAffixRecord->dwMod1Min, ptrMagicAffixRecord->dwMod1Max);
+				doMergeStatTable(ptrMagicAffixRecord->dwMod2Code, ptrMagicAffixRecord->dwMod2Min, ptrMagicAffixRecord->dwMod2Max);
+				doMergeStatTable(ptrMagicAffixRecord->dwMod3Code, ptrMagicAffixRecord->dwMod3Min, ptrMagicAffixRecord->dwMod3Max);
 			}
 		};
 
@@ -405,16 +406,18 @@ namespace CommonD2Funcs
 			DWORD32* ptrItemPropNBase = 0;
 			DWORD32 dwPropNModCode = 0;
 			DWORD32 dwMaxN = 0;
+			DWORD dwMinN = 0;
 			for (DWORD32 i = 0; i < iterations; ++i)
 			{
 				ptrItemPropNBase = ptrItemProp1Base + (i * 4);
 				dwPropNModCode = *ptrItemPropNBase;
 				dwMaxN = *(ptrItemPropNBase + 3);
+				dwMinN = *(ptrItemPropNBase + 2);
 
 				if (dwPropNModCode >= _D2C_dwMaxMod)
 					break;
 
-				doMergeStatTable(dwPropNModCode, dwMaxN);
+				doMergeStatTable(dwPropNModCode, dwMinN, dwMaxN);
 			}
 		};
 
@@ -458,8 +461,8 @@ namespace CommonD2Funcs
 					if(blah->wNumMods == 2)
 						std::cout << blah->szEffect2 << std::endl;
 
-					doMergeStatTable(blah->dwMod1Code, blah->dwMod1Max);
-					doMergeStatTable(blah->dwMod2Code, blah->dwMod2Max);
+					doMergeStatTable(blah->dwMod1Code, 0, blah->dwMod1Max);
+					doMergeStatTable(blah->dwMod2Code, 0, blah->dwMod2Max);
 				}
 				else
 				{
@@ -473,9 +476,9 @@ namespace CommonD2Funcs
 				D2AutoMagicTxt* ptrAutoMagicAffixRecord = D2COMMON_TXT_GetMagicAffixRecord(ptrItemData->autoPref);
 				if (ptrAutoMagicAffixRecord != nullptr)
 				{
-					doMergeStatTable(ptrAutoMagicAffixRecord->dwMod1Code, ptrAutoMagicAffixRecord->dwMod1Max);
-					doMergeStatTable(ptrAutoMagicAffixRecord->dwMod2Code, ptrAutoMagicAffixRecord->dwMod2Max);
-					doMergeStatTable(ptrAutoMagicAffixRecord->dwMod3Code, ptrAutoMagicAffixRecord->dwMod3Max);
+					doMergeStatTable(ptrAutoMagicAffixRecord->dwMod1Code, 0, ptrAutoMagicAffixRecord->dwMod1Max);
+					doMergeStatTable(ptrAutoMagicAffixRecord->dwMod2Code, 0, ptrAutoMagicAffixRecord->dwMod2Max);
+					doMergeStatTable(ptrAutoMagicAffixRecord->dwMod3Code, 0, ptrAutoMagicAffixRecord->dwMod3Max);
 				}
 			}
 		}
@@ -494,7 +497,7 @@ namespace CommonD2Funcs
 
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);
 			//TODO: RuleRvalUnprintableStats holds ALL non-printable stats... are there any that we actually want to check here?
-			if (record->second == 0 && !RuleManager.RuleRvalUnprintableStats.evaluate(static_cast<D2C_Stat>(record->first)))
+			if (record->second.second == 0 && !RuleManager.RuleRvalUnprintableStats.evaluate(static_cast<D2C_Stat>(record->first)))
 			{
 				ItemData* ptrItemData = ptrItemUnit->ptItemData;
 				if (ptrItemData != nullptr)
@@ -513,7 +516,7 @@ namespace CommonD2Funcs
 			}
 			//else
 			{
-				std::cout << std::dec << record->first << ':' << d2Stat.value << '/' << record->second << std::endl;
+				std::cout << std::dec << record->first << ':' << record->second.first << '/' << d2Stat.value << '/' << record->second.second << std::endl;
 			}
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE | FOREGROUND_INTENSITY);
 		}
